@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
 from app import auth
 from app.utils.config_loader import Config
+from pydantic import BaseModel, Field, ValidationError
+from app.dto.dto import UserLoginDTO, ProtectedRouteResponseDTO, PublicRouteResponseDTO
 
 api_blueprint = Blueprint('api', __name__)
 
@@ -21,11 +23,14 @@ def verify_password(username, password):
 @api_blueprint.route('/protected')
 @auth.login_required
 def protected():
-    return jsonify(message="This is a protected route")
+    response_dto = ProtectedRouteResponseDTO(message="This is a protected route")
+    return jsonify(response_dto.dict())
 
+# Public route
 @api_blueprint.route('/public')
 def public():
-    return jsonify(message="This is a public route")
+    response_dto = PublicRouteResponseDTO(message="This is a public route")
+    return jsonify(response_dto.dict())
 
 
 
