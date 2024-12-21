@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "Flask API with Basic Auth",
-    "description": "A simple API with Basic Authentication",
+    "title": "CV Screening API with Basic Authentication",
+    "description": "CV Screening API with Basic Authentication",
     "version": "1.0.0"
   },
   "paths": {
