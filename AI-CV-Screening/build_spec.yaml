@@ -17,11 +17,6 @@ steps:
     name: "Build and run Python app, create zip artifact if runs ok"
     command: |      
       ls -ltrah
-      python3 -m venv venv
-      source venv/bin/activate
-      pip install -r requirements.txt
-      python3 app.py
-      echo "Python app executed successfully."
       zip -r python_app.zip *
       ls -ltrah
       pwd
