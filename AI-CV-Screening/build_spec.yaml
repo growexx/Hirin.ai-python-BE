@@ -5,19 +5,20 @@ runAs: root
 shell: bash
 env:
   exportedVariables:
-    - buildId
+    - buildId  # Export buildId as a pipeline-wide variable
 steps:
   - type: Command
     name: "Create build-id for the artifact"
     command: |
       buildId=`echo ${OCI_BUILD_RUN_ID} | rev | cut -c 1-6 | rev`
       echo "Build ID: $buildId"
+      echo "buildId=$buildId" >> $OCI_CI_PROPERTIES  # Export buildId to OCI pipeline properties
 
   - type: Command
     name: "Build and run Python app, create zip artifact if runs ok"
-    command: |      
-      ls -ltrah
+    command: |
       zip -r python_app.zip *
+      echo "Artifact created successfully."
       ls -ltrah
       pwd
 
