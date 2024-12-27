@@ -2,44 +2,48 @@
   "openapi": "3.0.1",
   "info": {
     "title": "CV Screening API with Basic Authentication",
-    "description": "CV Screening API with Basic Authentication",
-    "version": "1.0.0"
+    "description": "This API provides functionality to evaluate CV relevance against job descriptions, with basic authentication for secure access.",
+    "version": "1.1.0"
   },
   "paths": {
-    "/protected": {
-      "get": {
-        "summary": "Protected Route",
-        "operationId": "getProtectedRoute",
+    "/getResumeScore": {
+      "post": {
+        "summary": "Get Resume Score",
+        "operationId": "postGetResumeScore",
         "security": [
           {
             "basicAuth": []
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "example": {
-                  "message": "This is a protected route"
-                }
+        "requestBody": {
+          "description": "Job request payload containing resume details and job description",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobRequestDTO"
               }
             }
           }
-        }
-      }
-    },
-    "/public": {
-      "get": {
-        "summary": "Public Route",
-        "operationId": "getPublicRoute",
+        },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Successful response with resume scoring details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload",
             "content": {
               "application/json": {
                 "example": {
-                  "message": "This is a public route"
+                  "error": "Invalid request",
+                  "details": ["Detailed validation error messages"]
                 }
               }
             }
@@ -53,6 +57,76 @@
       "basicAuth": {
         "type": "http",
         "scheme": "basic"
+      }
+    },
+    "schemas": {
+      "Metadata": {
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "description": "Unique identifier for the candidate"
+          },
+          "other_field": {
+            "type": "string",
+            "description": "Optional additional metadata field",
+            "nullable": true
+          }
+        },
+        "required": ["candidateId"]
+      },
+      "JobRequestDTO": {
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/Metadata"
+          },
+          "resume": {
+            "type": "string",
+            "description": "Resume content or link"
+          },
+          "jobDescriptionType": {
+            "type": "string",
+            "description": "Type of the job description (e.g., text, URL)"
+          },
+          "jobDescription": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "string", "format": "url" }
+            ],
+            "description": "Job description content or URL"
+          }
+        },
+        "required": ["metadata", "resume", "jobDescriptionType", "jobDescription"]
+      },
+      "JobResponseDTO": {
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "description": "Unique identifier for the candidate"
+          },
+          "resumeLink": {
+            "type": "string",
+            "description": "Link to the candidate's resume"
+          },
+          "jobDescriptionType": {
+            "type": "string",
+            "description": "Type of the job description provided"
+          },
+          "jobDescription": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "string", "format": "url" }
+            ],
+            "description": "Job description content or URL"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message indicating the outcome of the request"
+          }
+        },
+        "required": ["candidateId", "resumeLink", "jobDescriptionType", "jobDescription", "message"]
       }
     }
   }
