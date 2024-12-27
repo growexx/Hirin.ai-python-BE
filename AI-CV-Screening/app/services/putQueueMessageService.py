@@ -2,16 +2,14 @@ import oci
 from app.utils.config_loader import Config
 import os
 import time
+from app.logger_config import logger
+
 
 class PutMessageQueue:
-    service_endpoint = Config.get('Queue','service_endpoint')
-    queue_id = Config.get('Queue','queue_id')
-    mainPath = Config.get('Queue','mainPath')
-    confFilePath =  Config.get('Queue','confFilePath')
     
     @classmethod
     @staticmethod
-    def putMessage(cls):
+    def putMessage(cls, service_endpoint, queue_id,mainPath,confFilePath):
         time.sleep(10)
         print(f"service_endpoint:{cls.service_endpoint}")
         path = os.path.join(cls.mainPath, cls.confFilePath) 

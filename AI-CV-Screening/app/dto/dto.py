@@ -1,11 +1,27 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, HttpUrl, Field
+from typing import Optional, Union
 
 class UserLoginDTO(BaseModel):
     username: str = Field(..., description="Username of the user", max_length=50)
     password: str = Field(..., description="Password of the user", min_length=8)
 
-class ProtectedRouteResponseDTO(BaseModel):
-    message: str = Field(..., description="Message indicating access to the protected route")
+class Metadata(BaseModel):
+    candidateId: str
+    other_field: Optional[str] = None
 
-class PublicRouteResponseDTO(BaseModel):
-    message: str = Field(..., description="Message indicating access to the public route")
+class JobRequestDTO(BaseModel):
+    metadata: Metadata
+    resume: str
+    jobDescriptionType: str
+    jobDescription: Union[str, HttpUrl]
+# Response DTO
+class JobResponseDTO(BaseModel):
+    candidateId: str
+    resumeLink: str
+    jobDescriptionType: str
+    jobDescription: Union[str, HttpUrl]
+    message: str
+
+
+
+

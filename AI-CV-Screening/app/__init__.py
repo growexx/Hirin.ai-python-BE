@@ -4,11 +4,12 @@ from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
 import os
 from app.utils.config_loader import Config
+from app.logger_config import logger
 
-# Initialize the basic auth
+
 auth = HTTPBasicAuth()
 
-# Initialize the Swagger UI
+
 SWAGGER_URL = '/swagger'
 API_URL = os.path.join('/static', 'swagger.json')
 swaggerui_blueprint = get_swaggerui_blueprint(
@@ -25,6 +26,8 @@ def create_app():
 
     from app.api.routes import api_blueprint
     app.register_blueprint(api_blueprint)
+
+    logger.info("Flask application is starting")
 
     return app
 
