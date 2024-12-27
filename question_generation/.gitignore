@@ -1,0 +1,6 @@
+*.ini
+*.pyc
+*.pem
+__pycache__
+.DS_Store
+*.log
