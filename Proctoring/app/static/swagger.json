@@ -1,0 +1,158 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Proctoring API with Basic Authentication",
+    "description": "Proctoring API with Basic Authentication",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/submit-data": {
+      "post": {
+        "summary": "Submit Data for Video Processing",
+        "operationId": "submitData",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Payload containing metadata, questions, and user interaction data",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "metadata": {
+                    "type": "object",
+                    "description": "Additional metadata for the request"
+                  },
+                  "questions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "user_video_url": {
+                          "type": "string",
+                          "description": "URL of the user's video"
+                        }
+                      },
+                      "required": ["user_video_url"]
+                    }
+                  },
+                  "tab_switch_count": {
+                    "type": "integer",
+                    "description": "Count of tab switches during the session"
+                  },
+                  "exit_full_screen": {
+                    "type": "boolean",
+                    "description": "Whether the user exited full screen during the session"
+                  }
+                },
+                "required": ["metadata", "questions", "tab_switch_count", "exit_full_screen"]
+              },
+              "example": {
+                "metadata": {
+                  "exam_id": "12345",
+                  "user_id": "67890"
+                },
+                "questions": [
+                  {
+                    "user_video_url": "http://example.com/video1.mp4"
+                  },
+                  {
+                    "user_video_url": "http://example.com/video2.mp4"
+                  }
+                ],
+                "tab_switch_count": 3,
+                "exit_full_screen": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Processing started",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Processing started",
+                  "task_ids": [
+                    "uuid-task-id-1",
+                    "uuid-task-id-2"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or invalid fields",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Missing required fields: ['metadata']"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task-status/{task_id}": {
+      "get": {
+        "summary": "Check Task Status",
+        "operationId": "getTaskStatus",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the task",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task Status",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "completed",
+                  "result": {
+                    "summary": "Success",
+                    "details": "Video processed successfully."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Task ID not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  }
+}
