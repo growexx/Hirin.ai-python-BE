@@ -1,0 +1,10 @@
+venv
+config.ini
+/__pycache/*
+routes_new.py
+faceDetectionService_new.py
+oracle_conf.ini
+omkar.navik@growexx.com_2024-07-18T09_54_18.019Z.pem
+omkar.navik@growexx.com_2024-10-17T09_00_36.801Z.pem
+routes_old.py
+faceDetectionService_old
