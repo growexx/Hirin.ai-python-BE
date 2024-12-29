@@ -4,12 +4,12 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN adduser -D grs-user && chown -R grs-user:grs-user /app
+RUN adduser -D appuser && chown -R appuser:appuser /app
 
-USER grs-user
+USER appuser
 
 EXPOSE 5000
 
-CMD ["python3", "run.py", "--host=0.0.0.0", "--port=5000"]
+CMD ["python3", "run.py"]
