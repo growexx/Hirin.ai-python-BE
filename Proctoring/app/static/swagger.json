@@ -25,7 +25,21 @@
                 "properties": {
                   "metadata": {
                     "type": "object",
-                    "description": "Additional metadata for the request"
+                    "properties": {
+                      "exam_id": {
+                        "type": "string",
+                        "description": "Unique ID of the exam"
+                      },
+                      "user_id": {
+                        "type": "string",
+                        "description": "Unique ID of the user"
+                      },
+                      "candidate_id": {
+                        "type": "string",
+                        "description": "ID of the candidate"
+                      }
+                    },
+                    "required": ["candidate_id"]
                   },
                   "questions": {
                     "type": "array",
@@ -44,17 +58,42 @@
                     "type": "integer",
                     "description": "Count of tab switches during the session"
                   },
+                  "tab_switch_timestamps": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "Timestamps when tab switches occurred"
+                    }
+                  },
+                  "tab_switch_time": {
+                    "type": "integer",
+                    "description": "Total time spent on tab switches in seconds"
+                  },
                   "exit_full_screen": {
                     "type": "boolean",
                     "description": "Whether the user exited full screen during the session"
+                  },
+                  "role": {
+                    "type": "string",
+                    "description": "Role of the user"
+                  },
+                  "summarized_JD": {
+                    "type": "string",
+                    "description": "Summarized job description"
                   }
                 },
-                "required": ["metadata", "questions", "tab_switch_count", "exit_full_screen"]
+                "required": [
+                  "metadata", 
+                  "questions", 
+                  "tab_switch_count", 
+                  "exit_full_screen"
+                ]
               },
               "example": {
                 "metadata": {
                   "exam_id": "12345",
-                  "user_id": "67890"
+                  "user_id": "67890",
+                  "candidate_id": "candidate123"
                 },
                 "questions": [
                   {
@@ -65,7 +104,11 @@
                   }
                 ],
                 "tab_switch_count": 3,
-                "exit_full_screen": true
+                "tab_switch_timestamps": ["00:01:15", "00:02:45", "00:03:30"],
+                "tab_switch_time": 45,
+                "exit_full_screen": true,
+                "role": "student",
+                "summarized_JD": "This is a summarized job description."
               }
             }
           }
@@ -77,6 +120,11 @@
               "application/json": {
                 "example": {
                   "message": "Processing started",
+                  "metadata": {
+                    "exam_id": "12345",
+                    "user_id": "67890",
+                    "candidate_id": "candidate123"
+                  },
                   "task_ids": [
                     "uuid-task-id-1",
                     "uuid-task-id-2"
@@ -126,6 +174,11 @@
                 "example": {
                   "status": "completed",
                   "result": {
+                    "candidate_id": "candidate123",
+                    "tab_switch_count": 3,
+                    "tab_switch_timestamps": ["00:01:15", "00:02:45", "00:03:30"],
+                    "tab_switch_time": 45,
+                    "exit_full_screen": true,
                     "summary": "Success",
                     "details": "Video processed successfully."
                   }
