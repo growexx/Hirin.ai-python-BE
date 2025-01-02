@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:3.13-alpine
 
 WORKDIR /app
 
@@ -12,4 +12,4 @@ USER appuser
 
 EXPOSE 5001
 
-CMD ["python3", "run.py"]
+CMD ["hypercorn", "run:app", "--bind", "0.0.0.0:5001", "--reload"]
