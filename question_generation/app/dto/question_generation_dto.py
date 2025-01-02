@@ -1,6 +1,6 @@
 from pydantic import BaseModel, HttpUrl, Field
 from typing import Optional, Union
-from typing import List
+from typing import List,Dict
 
 
 class Skill(BaseModel):
@@ -15,10 +15,12 @@ class QuestionGenerationInputDTO(BaseModel):
     skills: List[Skill]
     total_time: int
 
-class QuestionGenerationOutputDTO(BaseModel):
-    status : str
-    key_skills: List[str]
-    proficiency_level: List[str]
-    questions_per_skill: List[int]
-    message: str = None
 
+class Question(BaseModel):
+    question: str
+    time: int
+
+class QuestionGenerationOutputDTO(BaseModel):
+    questions: Dict[str, List[Question]]
+    message: str
+    status: str
