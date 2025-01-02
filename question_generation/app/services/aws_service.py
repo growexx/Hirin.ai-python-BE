@@ -7,7 +7,7 @@ import aiohttp
 class AWSService:
 
     @classmethod
-    async def download_file_from_s3(url,save_dir):
+    async def download_file_from_s3(cls,url,save_dir):
        try:
         parsed_url = urlparse(url)
         path = parsed_url.path
