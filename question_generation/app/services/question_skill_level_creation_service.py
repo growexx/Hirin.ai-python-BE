@@ -15,10 +15,11 @@ class QuestionSkillLevelCreationService:
             totalQuestionByTwo = int(totalQuestion // 2)
             prompt_template = await Helper.read_prompt("app/static/question_skill_level_creation_prompt.txt")
             prompt = ''
-
+            print(f"job_description_type:{job_description_type}")
             if job_description_type == 'text':
                 prompt = prompt_template.format(job_description=jobDescription,interview_duration=interviewDuration,total_questions=totalQuestion,totalQuestionByTwo=totalQuestionByTwo)
             elif job_description_type == 'url':
+
                 path = await AWSService.download_file_from_s3(jobDescription,'app/static/JD/')
                 job_Description = GetText.getText(path)
 

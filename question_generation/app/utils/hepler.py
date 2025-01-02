@@ -1,6 +1,8 @@
 from app.logger_config import logger
 import aiofiles
 import json
+import re
+
 
 class Helper:
 
@@ -59,3 +61,29 @@ class Helper:
             return default_response
         
         return default_response
+    
+
+    @classmethod
+    def format_question_json(cls,inputQuestion):
+        pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*(\d*)\s*minutes\n.*?Key\s*Skill\s*:\s*(.*?)\n"
+        questions = {} 
+        matches = re.findall(pattern, inputQuestion, re.DOTALL)
+
+       
+        for match in matches:
+            question, time, skill = match
+            time = int(time)  
+    
+    
+        if skill not in questions:
+            questions[skill] = []
+            questions[skill].append({
+        "question": question.strip(),
+        "time": time
+    })
+
+        final_json = {"questions": questions}
+        json_output = json.dumps(final_json, indent=4)
+        return json_output
+
+    

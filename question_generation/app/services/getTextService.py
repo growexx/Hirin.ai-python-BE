@@ -6,7 +6,7 @@ class GetText:
     
     @classmethod
     @staticmethod
-    def getText(filePath):
+    def getText(cls,filePath):
        description = ""
        logger.info("file name : ",filePath)
        

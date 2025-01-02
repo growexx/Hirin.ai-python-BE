@@ -48,14 +48,23 @@ class QuestionGenerationService:
             skillLevel = []
             noOfQuestion = []
 
+            print(f"skills:{skills}")
+         
             for skill in skills:
-                 skillName.append(skill["name"])
-                 skillLevel.append(skill["level"])
-                 noOfQuestion.append(skill["totalQuestions"])
+                print(f"skill:{skill}")
+                skillName.append(skill.name)
+                skillLevel.append(skill.level)
+                noOfQuestion.append(skill.totalQuestions)
+
 
             if not skillName or not (len(skillName) == len(skillLevel) == len(noOfQuestion)):
                 logger.info("Inconsistent list lengths in the response.")
                 return None
+            
+            
+            
+            print(f"skillLevel")
+            
             
             questionGenerationPrompt = ''
 
@@ -66,7 +75,18 @@ class QuestionGenerationService:
                 questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
                 questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration=totalTime) 
             
-            return LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel) 
+            questions = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel)
+
+            
+            questions_json = Helper.format_question_json(questions)
+
+            print(f"questions_json:{questions_json}")
+
+            if not questions_json:
+                logger.error("Failed to convert question into the json formate")
+                return None
+            
+            return questions_json
 
         except Exception as e:
             logger.error(f"Failed to generate skill level for question: {str(e)}")
