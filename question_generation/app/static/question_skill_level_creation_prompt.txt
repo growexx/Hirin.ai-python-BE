@@ -1,0 +1,40 @@
+You are an expert in skill assessment and interview planning. Your task is to analyze the provided job description and generate the key skills required for the role, their proficiency level (Beginner/Intermediate/Expert), and distribute the total number of interview questions across these skills in a balanced and role-appropriate manner.
+
+**Input:**
+Job Description: {job_description}
+Total Interview Duration (in minutes): {interview_duration}
+Total Number of Questions: {total_questions}
+
+**Guidelines for Output:**
+1. **Key Skills Extraction**:
+   - Identify and prioritize the most critical skills explicitly mentioned in the job description.
+   - Infer additional skills only if they are essential for performing the role effectively.
+   - **Important Note**: The total number of skills extracted must not exceed {totalQuestionByTwo}. Select skills based on their importance to the role and relevance to the job description.
+
+2. **Proficiency Level Assignment**:
+   - Beginner: Basic understanding or foundational knowledge.
+   - Intermediate: Practical application in real-world scenarios.
+   - Expert: Advanced expertise, problem-solving, or leadership capability.
+
+3. **Question Allocation per Skill**:
+   - Distribute questions based on skill importance and proficiency level:
+     - Expert: More questions to assess depth of knowledge.
+     - Intermediate: Moderate number of questions to assess practical application.
+     - Beginner: Fewer questions for basic understanding.
+   - Each skill must have at least 2 questions.
+   - Ensure the total number of questions aligns exactly with the input.
+
+4. **Time Allocation**:
+   - Assign time per question to validate against the total interview duration.
+
+**Output Format:**
+Key Skills: [Extract the core skills from the job description]
+Proficiency Level: [Assign a proficiency level to each skill (Beginner, Intermediate, or Expert) based on the job description's requirements.]
+Questions per skill: [Distribute the total number of questions across the identified skills. Prioritize key skills mentioned as "Must-Have" in the job description and allocate questions proportionally based on their importance and required proficiency level.]
+
+**Additional Guidelines**:
+   - Structure the output using logical reasoning behind the allocation, but do not include the reasoning in the output.
+   - Return only Key Skills, Proficiency Level, and Questions per skill in a **JSON** format.
+   - Ensure the total number of questions matches the input, and the distribution aligns with the job's priorities.
+   - Validate the count of skills to ensure it never exceeds {totalQuestionByTwo}.
+"""

@@ -1,0 +1,49 @@
+Task: Generate a set of structured and consistent interview questions based on the provided job description to evaluate a candidate's suitability for the given role during an online interview.
+
+Job Description:{summarized_jd}
+
+Instructions:
+
+1. Review the Job Description:
+    - Identify key responsibilities, must-have skills, and good-to-have skills.
+
+2. Question Generation:
+    - Create at least one question per must-have skill or technology.
+    - Include good-to-have skills only if time allows.
+    - If the job description contains 10+ skills or responsibilities, prioritize Must-Have Skills and Responsibilities.
+    - Generate {no_of_questions} number of questions for this given Job Description.
+
+Question Design Guidelines:
+
+1. Expertise-Focused Questions (95% of total):
+    - Test specific technical skills and core concepts from the job description.
+    - Ensure each question has a clear and deterministic answer.
+    - Avoid open-ended, opinion-based, or experience-driven questions.
+
+2. Analytical Thinking Questions (5% of total):
+    - Evaluate problem-solving, decision-making, and conceptual understanding.
+    - Allow answers based on candidate strategies or reasoning.
+    - Limit to 1-2 questions in the set.
+
+Output Format (Strictly Follow This Structure):
+Role: [Extracted role title from the Job Description]
+Seniority Level: [The seniority level mentioned in the Job Description]
+Question Number [n]: [Write the question]
+Estimated Time: [X minutes]
+Level of Difficulty: [Easy/Medium/Hard]
+Topic: [Up to 3 core skills, technologies, or responsibilities directly tested by the question, chosen from must-have or good-to-have skills]
+Domain: [Appropriate domain derived from the job description]
+Skill Type: [Must-Have/Good-To-Have]
+Question-Type: [Expertise-focused/Analytical Thinking]
+
+Prohibited Question Types:
+    - Do not require the candidate to write code, scripts, or SQL queries.
+    - Avoid asking for examples or explanations that require writing specific syntax.
+
+Guidelines for Consistency:
+    - Time Management: Limit the total questions to fit a 45-minute interview timeframe.
+    - Skill Complexity Coverage: Tailor questions to match the complexity of each skill in the job description.
+    - Tag Accuracy: Ensure Topic, Domain, Skill Type, and other tags align with must-have or good-to-have skills.
+    - Generate only {no_of_questions} questions for this given Job Description.
+    - Output Review: Verify that all tags, estimated time, difficulty level, and skill types are accurate and aligned with the format.
+

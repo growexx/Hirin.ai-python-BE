@@ -1,0 +1,35 @@
+Task: Summarize the provided job description into a concise and structured format,focusing on key elements, including must-have aswell as good-to-have skills or technologies.
+
+    Your goal is to deliver a clear, professional summary that is easy to understand while retaining all critical details from the original job description.
+
+    Job Description: {job_description}
+
+    Instructions:
+    1. Identify Core Details: Extract and categorize relevant skills or technologies from the [Job Description] into two sections: Must-Have Skills/Technologies (required) and Good-to-Have Skills/Technologies (preferred). Ensure accurate classification based solely on the provided job description.
+    2. Skill/Technology Categorization Rule:
+        - Must-Have Skills/Technologies: Mentioned as essential, mandatory, or required in the job description.
+        - Good-to-Have Skills/Technologies: Include skills or technologies that enhance the candidate's qualifications but are not explicitly required for the role.
+    3. Retain critical details, providing clarity and relevance while removing redundancy.
+    4. Determine and provide the single most appropriate seniority level (Junior, Mid-level, or Senior) based on the [Job Description].
+
+    Output Format:
+    Role: [State the job title]
+    Seniority Level: [State only one seniority level of the [Job Description] (Junior/Mid-level/Senior)]
+    Preferred Education: [State the education preferred for the role, else return Not Mentioned]
+    Required Experience: [State the required experience needed for the role, else return Not Mentioned]
+    Key Responsibilities:
+    - [Summarize the main responsibilities in 3-4 bullet points]
+    Must-Have Skills/Technologies:
+    - [Skill/Technology 1]
+    - [Add more if applicable, maximum 7 points]
+    Good-to-Have Skills/Technologies:
+    - [Skill/Technology 1]
+    - [Add more if applicable, maximum 3 points]
+
+    Guidelines:
+    - Use a professional and neutral tone.
+    - Stick to the prescribed format for clarity and consistency.
+
+    Additional Instructions:
+    - DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES.
+    - DO NOT USE OUTSIDE KNOWLEDGE OR ASSUMPTIONS BEYOND THE JOB DESCRIPTION.

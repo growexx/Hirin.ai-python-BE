@@ -6,30 +6,164 @@
     "version": "1.1.0"
   },
   "paths": {
-    "/test": {
-      "get": {
-        "summary": "Test Endpoint",
-        "operationId": "getTest",
+    "/create-job-description": {
+      "post": {
+        "summary": "Create Job Description",
+        "operationId": "jobDescriptionCreation",
         "security": [
           {
             "basicAuth": []
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobDescriptionInputDTO"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Successful test response",
+            "description": "Job description successfully created",
             "content": {
-              "text/plain": {
-                "example": "message"
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDescriptionOutputDTO"
+                }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized access",
+          "400": {
+            "description": "Bad request - missing fields",
             "content": {
               "application/json": {
                 "example": {
-                  "error": "Unauthorized"
+                  "status": "error",
+                  "message": "Please provide the missing field."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "An error occurred: <error message>"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/create-complexity-skills": {
+      "post": {
+        "summary": "Create Complexity Skills",
+        "operationId": "skillsNoQuestionsCreation",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionSkillCreationInputDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Skills successfully processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionSkillCreationOutputDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing fields",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "Please provide the missing field."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "An error occurred: <error message>"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/question-generation": {
+      "post": {
+        "summary": "Generate Questions Based on Job Description",
+        "operationId": "questionGeneration",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionGenerationInputDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Questions successfully generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionGenerationOutputDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing fields",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "Please provide the missing field."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "An error occurred: <error message>"
                 }
               }
             }
@@ -61,58 +195,173 @@
         },
         "required": ["candidateId"]
       },
-      "JobRequestDTO": {
+      "JobDescriptionInputDTO": {
         "type": "object",
         "properties": {
-          "metadata": {
-            "$ref": "#/components/schemas/Metadata"
-          },
-          "resume": {
+          "job_summary": {
             "type": "string",
-            "description": "Resume content or link"
-          },
-          "jobDescriptionType": {
-            "type": "string",
-            "description": "Type of the job description (e.g., text, URL)"
-          },
-          "jobDescription": {
-            "oneOf": [
-              { "type": "string" },
-              { "type": "string", "format": "url" }
-            ],
-            "description": "Job description content or URL"
+            "description": "Summary of the job description"
           }
         },
-        "required": ["metadata", "resume", "jobDescriptionType", "jobDescription"]
+        "required": ["job_summary"]
       },
-      "JobResponseDTO": {
+      "JobDescriptionOutputDTO": {
         "type": "object",
         "properties": {
-          "candidateId": {
+          "status": {
             "type": "string",
-            "description": "Unique identifier for the candidate"
+            "description": "Response status"
           },
-          "resumeLink": {
+          "job_description": {
             "type": "string",
-            "description": "Link to the candidate's resume"
-          },
-          "jobDescriptionType": {
-            "type": "string",
-            "description": "Type of the job description provided"
-          },
-          "jobDescription": {
-            "oneOf": [
-              { "type": "string" },
-              { "type": "string", "format": "url" }
-            ],
-            "description": "Job description content or URL"
+            "description": "Generated job description"
           },
           "message": {
             "type": "string",
-            "description": "Message indicating the outcome of the request"
+            "description": "Message describing the outcome"
           }
         },
-        "required": ["candidateId", "resumeLink", "jobDescriptionType", "jobDescription", "message"]
+        "required": ["status"]
+      },
+      "Skill": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the skill"
+          },
+          "level": {
+            "type": "string",
+            "description": "Proficiency level of the skill"
+          },
+          "totalQuestions": {
+            "type": "integer",
+            "description": "Total number of questions for this skill"
+          }
+        },
+        "required": ["name", "level", "totalQuestions"]
+      },
+      "QuestionGenerationInputDTO": {
+        "type": "object",
+        "properties": {
+          "job_description": {
+            "type": "string",
+            "description": "Job description text"
+          },
+          "job_description_url": {
+            "type": "string",
+            "format": "url",
+            "description": "URL to the job description"
+          },
+          "is_text": {
+            "type": "boolean",
+            "description": "Indicates if the job description is provided as text"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Skill"
+            },
+            "description": "List of required skills"
+          },
+          "total_time": {
+            "type": "integer",
+            "description": "Total time allocated for the questions"
+          }
+        },
+        "required": ["job_description", "job_description_url", "is_text", "skills", "total_time"]
+      },
+      "QuestionGenerationOutputDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Response status"
+          },
+          "key_skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Key skills identified"
+          },
+          "proficiency_level": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Proficiency levels for each skill"
+          },
+          "questions_per_skill": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Number of questions for each skill"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the outcome"
+          }
+        },
+        "required": ["status", "key_skills", "proficiency_level", "questions_per_skill"]
+      },
+      "QuestionSkillCreationInputDTO": {
+        "type": "object",
+        "properties": {
+          "job_description": {
+            "type": "string",
+            "description": "Job description text"
+          },
+          "total_questions": {
+            "type": "integer",
+            "description": "Total number of questions"
+          },
+          "interview_duration": {
+            "type": "integer",
+            "description": "Duration of the interview"
+          },
+          "job_description_type": {
+            "type": "string",
+            "description": "Type of the job description (text or URL)"
+          }
+        },
+        "required": ["job_description", "total_questions", "interview_duration", "job_description_type"]
+      },
+      "QuestionSkillCreationOutputDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Response status"
+          },
+          "key_skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Key skills identified"
+          },
+          "proficiency_level": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Proficiency levels for each skill"
+          },
+          "questions_per_skill": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Number of questions for each skill"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the outcome"
+          }
+        },
+        "required": ["status", "key_skills", "proficiency_level", "questions_per_skill"]
       }
     }
   }

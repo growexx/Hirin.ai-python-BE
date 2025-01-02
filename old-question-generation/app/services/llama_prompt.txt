@@ -1,0 +1,49 @@
+Task: Based on the provided job description, generate a set of relevant interview questions that assess the candidate's suitability for the given role in an online interview setting.
+
+Job Description: {summarized_jd}
+
+Instructions:
+
+1. Review the Job Description:
+    - Identify key responsibilities, must-have skills, and good-to-have skills.
+2. Question Generation:
+    - Generate at least one question per must-have skill/technology.
+    - Include good-to-have skills only if time permits.
+    - If multiple skills and responsibilities are listed (10+), prioritize Must-Have Skills and Responsibilities over Good-to-Have Skills.
+    - Generate {no_of_questions} number of questions for this given Job Description.
+
+Question Design Guidelines:
+
+1. Expertise-Focused Questions (95% of total):
+
+    - Test specific technical skills and core concepts from the job description.
+    - Ensure each question has a clear, deterministic answer.
+    - Avoid open-ended, opinion-based, or experience-driven questions.
+
+2. Analytical Thinking Questions (5% of total):
+
+    - Evaluate problem-solving, decision-making, and conceptual understanding.
+    - Allow diverse answers based on candidate strategies or reasoning.
+    - Limit to 1-2 questions in the overall set.
+
+Output Format:
+Role: [Role title from the [Job Description]]
+Seniority Level: [The seniority level mentioned in the [Job Description]]
+Question Number [n]: [Write the question]
+Estimated Time: [X minutes]
+Level of Difficulty: [Easy/Medium/Hard]
+Topic: [Select up to 3 core skills, technologies, or responsibilities that the question directly tests, based on the job description. Choose tags only from must-have and good-to-have skills.]
+Domain: [Allocate the appropriate domain of the topic from which the question is derived.]
+Skill Type: [Extract the skill type mentioned in the [Job Description] for the question, i.e (Must-Have/Good-To-Have)]
+Question-Type: [Question type: Expertise-focused/Analytical Thinking]
+
+**Prohibited Question Types**
+Do not ask the candidate to write scripts, code, or SQL queries during the interview.
+Do not ask for examples or explanations that inherently require writing code or specific syntax.
+
+Guidelines:
+- Time Management: Adjust the number of questions to fit within a 45-minute interview timeframe
+- Skill Complexity Coverage: Questions tailored to the complexity of each skill as mentioned in the Job Description and requirements of the role.
+- Question Quality: Ensure expertise-focused questions assess technical knowledge or clear practical understanding.
+- Generate only {no_of_questions} questions for this given Job Description.
+- Output Consistency: Follow the exact output format provided. Double-check that tags, estimated time, difficulty level, and skill types are accurately assigned.
