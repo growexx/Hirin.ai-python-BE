@@ -21,10 +21,10 @@ class AWSService:
                 if response.status == 200:
                     with open(save_path, 'wb') as f:
                         f.write(await response.read())
-                    print(f"File downloaded successfully: {save_path}")
+                    logger.info(f"File downloaded successfully: {save_path}")
                     return save_path
                 else:
-                    print(f"Failed to download file. Status code: {response.status}")
+                    logger.info(f"Failed to download file. Status code: {response.status}")
                     return None
        except Exception as e:
         logger.error(f"Failed to download job_description from s3: {str(e)}")
