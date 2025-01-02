@@ -18,7 +18,7 @@ class QuestionGenerationService:
             if isText:
                 jd_prompt = jd_summary_prompt_template.format(job_description=jobDescription)
             else:
-                path = await AWSService.download_file_from_s3('your-bucket-name', jobDescriptionUrl, '/path/to/save/your/file.txt')
+                path = await AWSService.download_file_from_s3(jobDescriptionUrl,'app/static/JD/')
                 job_Description = GetText.getText(path)
 
                 if not job_Description:
@@ -51,7 +51,6 @@ class QuestionGenerationService:
             print(f"skills:{skills}")
          
             for skill in skills:
-                print(f"skill:{skill}")
                 skillName.append(skill.name)
                 skillLevel.append(skill.level)
                 noOfQuestion.append(skill.totalQuestions)
@@ -59,28 +58,24 @@ class QuestionGenerationService:
 
             if not skillName or not (len(skillName) == len(skillLevel) == len(noOfQuestion)):
                 logger.info("Inconsistent list lengths in the response.")
-                return None
-            
-            
-            
-            print(f"skillLevel")
-            
+                return None        
             
             questionGenerationPrompt = ''
 
             if int(totalTime) == 0:
                 questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_withouttime_prompt.txt")
-                questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion) 
+                questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion)
+                
+
             else:
                 questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
-                questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration=totalTime) 
+                questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration=totalTime)
+                print(f"questionGenerationPrompt:{questionGenerationPrompt}")
             
-            questions = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel)
-
-            
+            questions = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel) 
             questions_json = Helper.format_question_json(questions)
 
-            print(f"questions_json:{questions_json}")
+        
 
             if not questions_json:
                 logger.error("Failed to convert question into the json formate")

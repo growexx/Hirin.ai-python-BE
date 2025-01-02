@@ -129,15 +129,15 @@ async def question_generation():
             }), 400
         
         questions = await QuestionGenerationService.questionGeneration(groq_client,Models['GROQ_MODLE'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time)
+        print(f"questions:{questions}")
+        
 
-        response = QuestionGenerationOutputDTO(
-            status="success",
-            message="question successfully generated",
-            questions = questions
+        return jsonify({
+            "status": "success",
+            "message": "question generated successfully...",
+            "question":questions
 
-        )
-
-        return jsonify(response.model_dump()), 200 
+        }), 200
         
         
     except Exception as e:
