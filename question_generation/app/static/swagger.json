@@ -327,4 +327,42 @@
           }
         },
         "required": ["job_description", "total_questions", "interview_duration", "job_description_type"]
-     
+      },
+      "QuestionSkillCreationOutputDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Response status"
+          },
+          "key_skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Key skills identified"
+          },
+          "proficiency_level": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Proficiency levels for each skill"
+          },
+          "questions_per_skill": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Number of questions for each skill"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the outcome"
+          }
+        },
+        "required": ["status", "key_skills", "proficiency_level", "questions_per_skill"]
+      }
+    }
+  }
+}
