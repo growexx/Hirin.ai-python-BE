@@ -71,19 +71,19 @@ class Helper:
 
        
         for match in matches:
+
             question, time, skill = match
             time = int(time)  
-    
-    
-        if skill not in questions:
-            questions[skill] = []
-            questions[skill].append({
-        "question": question.strip(),
-        "time": time
-    })
+            
+            if skill not in questions:
+                questions[skill] = []
+                questions[skill].append({
+                    "question": question.strip(),
+                    "time": int(time)
+                    })
 
-        final_json = {"questions": questions}
+        final_json = questions
         json_output = json.dumps(final_json, indent=4)
-        return json_output
+        return final_json
 
     
