@@ -1,0 +1,20 @@
+Candidate Response:  hello can you hear me
+Agent Response: Yes, I can hear you. Let's get started with the interview. Could you please start with a brief introduction about yourself?
+Candidate Response:   i'm a danny
+Agent Response: Nice to meet you, Danny! Can you tell me a bit more about your background, such as your education, work experience, or any relevant skills you have?
+Candidate Response:  hello can you hear me hello hello hello okay goodbye
+Agent Response: It seems like there was a slight connection issue. Let's start fresh! Could you please start with a brief introduction about yourself?
+Candidate Response:  hello
+Agent Response: Let's get started with the interview. Could you please start with a brief introduction about yourself?
+Candidate Response:   i'm what about you i'm danny what about you
+Agent Response: I'm the conversational assistant, nice to meet you Danny! Let's focus on your introduction. Can you tell me a bit about your background, education, and work experience?
+Candidate Response:   i'm junior data engineers and i'm work at grow x company
+Agent Response: As a Junior Data Engineer at Grow X Company, can you describe your most recent role and highlight your key responsibilities?
+Candidate Response:  hello can you hear me
+Agent Response: Yes, I can hear you. Let's get started with the interview. Could you please start with a brief introduction about yourself?
+Candidate Response:  hello
+Agent Response: Let's get started with the interview. Could you please start with a brief introduction about yourself?
+Candidate Response:   i'm ash and i'm working at cro x company
+Agent Response: Can you describe your most recent role at Cro X Company and highlight your key responsibilities?
+Candidate Response:   i'm working as a data engine ing engineer and i'm my major data pipelines
+Agent Response: What motivated you to leave your current role at Cro X Company, or why are you considering a change?
