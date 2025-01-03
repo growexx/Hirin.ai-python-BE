@@ -32,12 +32,14 @@ tts_voice_id = config.get('tts', 'voice_id')
 elevenlabs_api_key = config.get('tts', 'api_key')
 # Deepgram Access
 deepgram_api_key = config.get('deepgram', 'deepgram_api_key')
+deep_gram_url = config.get('deepgram', 'deep_gram_url')
 # AWS Access
 aws_access_key_id = config.get('aws', 'aws_access_key_id')
 aws_secret_access_key = config.get('aws', 'aws_secret_accesss_key')
 aws_region = config.get('aws', 'aws_region')
 sns_topic_arn = config.get('aws', 'aws_sns_topic_arn')
 queue_url = config.get('aws', 'queue_url')
+deep_gram_url = config.get('deepgram', 'deep_gram_url')
 
 websocket_url = "wss://" + websocket_url
 SILENCE_THRESHOLD = 12
@@ -50,7 +52,7 @@ def validate_phone_no(phone_no:str):
 async def websocket_handler(client_ws):
     start_time = time.time()
     Call_ongoing = asyncio.Lock()
-    deepgram_service = DeepgramService(api_key=deepgram_api_key)
+    deepgram_service = DeepgramService(api_key=deepgram_api_key,deepgram_url=deep_gram_url)
     llm_processor = LanguageModelProcessor(llm_api_key=llm_api_key, llm_model=llm_model, system_prompt="")
     elevenlabs_service = ElevenLabsService(api_key=elevenlabs_api_key, voice_id=tts_voice_id, model_id="eleven_flash_v2")
     sqs_client = boto3.resource('sqs', region_name=aws_region,aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
@@ -211,13 +213,11 @@ async def poll_queue():
             # Wait for 5 seconds before the next poll
             await asyncio.sleep(5)
 
-# Main WebSocket Server - Level 2 websocket connecting to twilio on websocket handler(5001) and web app providing api at 5001 listening triggerscreening 
 async def main():
     asyncio.create_task(poll_queue())
     ws_server = await websockets.serve(websocket_handler, 'localhost', 5001)  # Port 5001 for AI screening WebSocket
     await ws_server.wait_closed()
     print("Ending websocket")
 
-# Level 1 Pass 
 if __name__ == "__main__":
     asyncio.run(main())

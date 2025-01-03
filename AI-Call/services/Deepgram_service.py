@@ -2,7 +2,10 @@ import asyncio
 import websockets
 import base64
 import json
+import configparser
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 async def sns_publisher(sns_client,sns_topic_arn,message):
     message_payload = {
@@ -16,14 +19,15 @@ async def sns_publisher(sns_client,sns_topic_arn,message):
     return response
 
 class DeepgramService:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str,deepgram_url:str):
         self.api_key = api_key
+        self.deepgram_url = deepgram_url
         self.ws = None  # Store the WebSocket connection here
 
     async def connect(self):
         headers = {'Authorization': f'Token {self.api_key}'}
         self.ws = await websockets.connect(
-            "wss://api.deepgram.com/v1/listen?encoding=mulaw&sample_rate=8000&endpointing=true",
+            self.deepgram_url,
             extra_headers=headers,
             ping_interval=20,  # Send a ping every 20 seconds      
             ping_timeout=10 # Wait 10 seconds for a pong response
