@@ -11,11 +11,13 @@ class AWSService:
        try:
         parsed_url = urlparse(url)
         path = parsed_url.path
+
         file_name = unquote(os.path.basename(path)).replace("'", "")
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, file_name)
         response = requests.get(url)
-        
+
+
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status == 200:
