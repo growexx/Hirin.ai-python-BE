@@ -45,7 +45,7 @@ To run the WebSocket server, execute the following command:
 	python3 -m venv myenv
 	source myenv/bin/activate
 	pip install -r requirements.txt
-	python3 -m Main_AI_Call.py
+	python3 Main_AI_Call.py
 
 This starts the WebSocket server on localhost:5001 and begins polling the AWS SQS queue for new messages.
 
