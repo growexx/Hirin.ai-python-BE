@@ -39,7 +39,6 @@ aws_secret_access_key = config.get('aws', 'aws_secret_accesss_key')
 aws_region = config.get('aws', 'aws_region')
 sns_topic_arn = config.get('aws', 'aws_sns_topic_arn')
 queue_url = config.get('aws', 'queue_url')
-deep_gram_url = config.get('deepgram', 'deep_gram_url')
 
 websocket_url = "wss://" + websocket_url
 SILENCE_THRESHOLD = 12
