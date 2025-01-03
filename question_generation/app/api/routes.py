@@ -129,8 +129,6 @@ async def question_generation():
             }), 400
         
         questions = await QuestionGenerationService.questionGeneration(groq_client,Models['GROQ_MODLE'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time)
-        print(f"questions:{questions}")
-        
 
         return jsonify({
             "status": "success",

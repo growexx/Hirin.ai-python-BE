@@ -68,8 +68,7 @@ class Helper:
         pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*(\d*)\s*minutes\n.*?Key\s*Skill\s*:\s*(.*?)\n"
         questions = {} 
         matches = re.findall(pattern, inputQuestion, re.DOTALL)
-
-       
+        
         for match in matches:
 
             question, time, skill = match
@@ -77,10 +76,11 @@ class Helper:
             
             if skill not in questions:
                 questions[skill] = []
-                questions[skill].append({
+            questions[skill].append({
                     "question": question.strip(),
                     "time": int(time)
                     })
+            
 
         final_json = questions
         json_output = json.dumps(final_json, indent=4)

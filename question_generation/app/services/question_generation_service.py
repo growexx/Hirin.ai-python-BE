@@ -70,10 +70,12 @@ class QuestionGenerationService:
             else:
                 questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
                 questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration=totalTime)
-                print(f"questionGenerationPrompt:{questionGenerationPrompt}")
+                
             
-            questions = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel) 
+            questions = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel)
+            
             questions_json = Helper.format_question_json(questions)
+            print(f"questionGenerationPrompt:{questions_json}") 
 
         
 
