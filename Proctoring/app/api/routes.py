@@ -18,6 +18,7 @@ processing_tasks = {}
 def verify_password(username, password):
     return username if users.get(username) == password else None
 
+
 def process_video_in_thread(video_url, task_id, folder_index, candidate_id, tab_switch_count, tab_switch_timestamps, tab_switch_time, exit_full_screen):
     try:
         service = FaceDetectionService(folder_index)
