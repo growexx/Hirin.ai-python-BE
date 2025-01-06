@@ -65,23 +65,39 @@ class QuestionGenerationService:
             sumQuestionsPerSkill = sum(noOfQuestion)
             print(f"sumQuestionsPerSkill:{sumQuestionsPerSkill}")
 
-            if int(totalTime) == 0:
-                # questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_withouttime_prompt.txt")
-                questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration="",sumquestionsPerSkill=sumQuestionsPerSkill)
-            else:
-                # questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
-                questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration=totalTime,sumquestionsPerSkill=sumQuestionsPerSkill)
-                
-            
-            questions = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel)
-            
-            questions_json = Helper.format_question_json(questions)
- 
-            if not questions_json:
-                logger.error("Failed to convert question into the json formate")
-                return None
-            
-            return questions_json
+            # if int(totalTime) == 0:
+            #     # questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_withouttime_prompt.txt")
+            #     questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration="",sumquestionsPerSkill=sumQuestionsPerSkill)
+            # else:
+            #     # questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
+
+            questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration=totalTime,sumquestionsPerSkill=sumQuestionsPerSkill)
+            questionsIntermediate = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel)
+
+            while True:
+                if questionsIntermediate is None:
+                    logger.info("Error: LLM generation failed. Exiting.")
+                    return None
+                 
+                questionsIntermediate, mismatched_skills, expected_questions, mismatched_proficiency = Helper.remove_extra_questions(
+                questionsIntermediate, skillName, noOfQuestion, skillLevel)
+        
+                if not mismatched_skills:
+                    logger.info("All skills have the correct number of questions.")
+                    questions_json = Helper.format_question_json(questionsIntermediate)
+
+                    if not questions_json:
+                        logger.error("Failed to convert question into the json formate")
+                        return None
+                    return questions_json
+                else:
+                    logger.info(f"Regenerating for mismatched skills: {mismatched_skills}")
+                    sumQuestionsPerSkill = sum(expected_questions)
+                    prompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=mismatched_skills,proficiencyLevel=mismatched_proficiency,questionsPerSkill=expected_questions,interview_duration=totalTime,sumquestionsPerSkill=sumQuestionsPerSkill)
+                    regenerated_questions = LLMClient.GroqLLM(groq_client, prompt, lmodel)
+                    
+                    if regenerated_questions:
+                        questionsIntermediate += "\n" + regenerated_questions
 
         except Exception as e:
             logger.error(f"Failed to generate skill level for question: {str(e)}")

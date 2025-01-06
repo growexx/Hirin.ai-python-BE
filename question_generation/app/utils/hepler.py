@@ -65,25 +65,63 @@ class Helper:
 
     @classmethod
     def format_question_json(cls,inputQuestion):
-        pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*(\d*)\s*minutes\n.*?Key\s*Skill\s*:\s*(.*?)\n"
-        questions = {} 
-        matches = re.findall(pattern, inputQuestion, re.DOTALL)
-        
-        for match in matches:
-
-            question, time, skill = match
-            time = int(time)  
+        try:
+            pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*(\d*)\s*minutes\n.*?Key\s*Skill\s*:\s*(.*?)\n"
+            questions = {} 
+            matches = re.findall(pattern, inputQuestion, re.DOTALL)
             
-            if skill not in questions:
-                questions[skill] = []
-            questions[skill].append({
-                    "question": question.strip(),
-                    "time": int(time)
-                    })
-            
+            for match in matches:
 
-        final_json = questions
-        json_output = json.dumps(final_json, indent=4)
-        return final_json
+                question, time, skill = match
+                time = int(time)  
+                
+                if skill not in questions:
+                    questions[skill] = []
+                questions[skill].append({
+                        "question": question.strip(),
+                        "time": int(time)
+                        })
+                
+
+            final_json = questions
+            json_output = json.dumps(final_json, indent=4)
+            return final_json
+        except Exception as e:
+            logger.error(f"error occured while formate question : {e}")
+
+    
+
+    @classmethod
+    def remove_extra_questions(cls,output, keySkills, questionsPerSkill, proficiencyLevel):
+        try:
+            updated_output = output
+            mismatched_skills = []
+            expected_questions = []
+            mismatched_proficiency = []
+
+            for i, skill in enumerate(keySkills):
+                
+                pattern = fr"(Question Number \d+:.*?Key Skill: {re.escape(skill)}.*?(?=\nQuestion Number|\Z))"
+                matches = list(re.finditer(pattern, output, re.DOTALL))
+                
+                
+                if len(matches) > questionsPerSkill[i]:
+                    excess_count = len(matches) - questionsPerSkill[i]
+                    for match in matches[questionsPerSkill[i]:]:  
+                        updated_output = updated_output.replace(match.group(0), "", 1)
+                
+                
+                current_count = min(len(matches), questionsPerSkill[i])
+                if current_count != questionsPerSkill[i]:
+                    mismatched_skills.append(skill)
+                    expected_questions.append(questionsPerSkill[i])
+                    mismatched_proficiency.append(proficiencyLevel[i])
+            
+            return updated_output.strip(), mismatched_skills, expected_questions, mismatched_proficiency
+        except Exception as e:
+            logger.error(f"Error occured while remove extra question : {e}")
+    
+
+    
 
     
