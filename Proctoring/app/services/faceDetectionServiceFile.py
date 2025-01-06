@@ -13,7 +13,7 @@ class FaceDetectionService:
         self.output_file = f"people_tracking_output_{folder_index}.txt"
         self.json_output_file = f"formatted_output_{folder_index}.json"
 
-    def extract_audio_frames(self, video_path, frame_interval_seconds=1):
+    def extract_audio_frames(self, video_path, frame_interval_seconds=4):
         print("Inside extract audio frames")
         os.makedirs(self.frames_dir, exist_ok=True)
 
@@ -102,7 +102,7 @@ class FaceDetectionService:
         no_face_detected = False
 
         for line in lines:
-            match = re.match(r"{'timestamp': (\d+\.\d+), 'faces': \[(.*)\]}", line.strip())
+            match = re.match(r"{\'timestamp\': (\d+\.\d+), \'faces\': \[(.*)\]}", line.strip())
             if match:
                 timestamp = float(match.group(1))
                 faces = match.group(2).replace("'", "").split(", ") if match.group(2) else []
@@ -145,16 +145,18 @@ class FaceDetectionService:
         score = 100
         exit_fullscreen = api_data['exit_full_screen']
         tab_switch_count = api_data['tab_switch_count']
+        tab_switch_time = api_data['tab_switch_time']
         multiple_faces = api_data['result']['multipleFacesDetected']
         time_not_in_frame_str = api_data['result']['timePersonWasNotInFrame']
         time_not_in_frame = int(time_not_in_frame_str.split()[0])
 
-        P1 = 30 if exit_fullscreen else 0
-        P2 = 20 if tab_switch_count > 5 else (10 if tab_switch_count > 2 else (5 if tab_switch_count > 0 else 0))
-        P3 = 30 if multiple_faces else 0
-        P4 = 20 if time_not_in_frame > 60 else (10 if time_not_in_frame > 30 else (5 if time_not_in_frame > 5 else 0))
+        P1 = 25 if exit_fullscreen else 0
+        P2 = 12.5 if tab_switch_count > 5 else (8 if tab_switch_count > 2 else (4 if tab_switch_count > 0 else 0))
+        P3 = 25 if multiple_faces else 0
+        P4 = 12.5 if time_not_in_frame > 60 else (8 if time_not_in_frame > 30 else (4 if time_not_in_frame > 5 else 0))
+        P5 = 25 if tab_switch_time > 60 else (15 if tab_switch_time > 30 else (10 if tab_switch_time > 5 else 0))
 
-        total_penalty = P1 + P2 + P3 + P4
+        total_penalty = P1 + P2 + P3 + P4 + P5
         final_score = max(score - total_penalty, 0)
 
         interpretation = (
@@ -169,15 +171,45 @@ class FaceDetectionService:
             "Proctoring Interpretation": interpretation
         }
 
-    def process_video(self, video_path, tab_switch_count, exit_full_screen):
+    def processing_tab_timestamps(self, tab_switch_time, tab_switch_timestamps):
+        if tab_switch_time > 0:
+            return tab_switch_time
+        print("tab_switch_time", tab_switch_time)
+
+        if not isinstance(tab_switch_timestamps, list) or len(tab_switch_timestamps) % 2 != 0:
+            print("length of tab_switch_timestamps:: ", len(tab_switch_timestamps))
+            raise ValueError("Tab switch timestamps must be a list of paired timestamps.")
+
+        def convert_time_to_seconds(timestamp):
+            h, m, s = map(int, timestamp.split(":"))
+            return h * 3600 + m * 60 + s
+
+        total_time = 0
+        for i in range(0, len(tab_switch_timestamps), 2):
+            start_time = convert_time_to_seconds(tab_switch_timestamps[i])
+            end_time = convert_time_to_seconds(tab_switch_timestamps[i + 1])
+            total_time += end_time - start_time
+
+        print("total time not in tab:: ", total_time)
+
+        return total_time
+
+    def process_video(self, video_path, candidate_id, tab_switch_count, tab_switch_timestamps, tab_switch_time, exit_full_screen):
         self.extract_audio_frames(video_path)
         self.count_and_track_people()
         formatted_output = self.format_output()
         formatted_output["tab_switch_count"] = tab_switch_count
         formatted_output["exit_full_screen"] = exit_full_screen
+        candidate_id = candidate_id
+
+        # Calculate tab switch time
+        total_tab_switch_time = self.processing_tab_timestamps(tab_switch_time, tab_switch_timestamps)
+        formatted_output["tab_switch_time"] = total_tab_switch_time
+
         proctor_score = self.calculate_proctoring_score({
             "exit_full_screen": exit_full_screen,
             "tab_switch_count": tab_switch_count,
+            "tab_switch_time": total_tab_switch_time,
             "result": formatted_output
         })
         formatted_output["proctor_score"] = proctor_score

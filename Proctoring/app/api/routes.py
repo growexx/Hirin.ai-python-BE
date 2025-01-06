@@ -18,21 +18,33 @@ processing_tasks = {}
 def verify_password(username, password):
     return username if users.get(username) == password else None
 
-def process_video_in_thread(video_url, task_id, folder_index, tab_switch_count, exit_full_screen):
+
+def process_video_in_thread(video_url, task_id, folder_index, candidate_id, tab_switch_count, tab_switch_timestamps, tab_switch_time, exit_full_screen):
     try:
         service = FaceDetectionService(folder_index)
-        result = service.process_video(video_url, tab_switch_count, exit_full_screen)
+        result = service.process_video(video_url, candidate_id, tab_switch_count, tab_switch_timestamps, tab_switch_time, exit_full_screen)
+
+        # Include additional details in the result
+        result.update({
+            "candidate_id": candidate_id,
+            "tab_switch_count": tab_switch_count,
+            "tab_switch_timestamps": tab_switch_timestamps,
+            "tab_switch_time": tab_switch_time,
+            "exit_full_screen": exit_full_screen
+        })
+
         # Update task status to completed
         processing_tasks[task_id] = {"status": "completed", "result": result}
         print(f"Task {task_id} completed successfully. Result: {result}")
-        
+
         # Clean up completed task by removing it from the dictionary
         del processing_tasks[task_id]
+
     except Exception as e:
         # Update task status to failed
         processing_tasks[task_id] = {"status": "failed", "error": str(e)}
         print(f"Task {task_id} failed. Error: {str(e)}")
-        
+
         # Clean up failed task by removing it from the dictionary
         del processing_tasks[task_id]
 
@@ -43,14 +55,27 @@ def submit_data():
     if not data:
         return jsonify({'error': "No JSON payload provided"}), 400
 
-    required_keys = ['metadata', 'questions', 'tab_switch_count', 'exit_full_screen']
+    required_keys = [
+        'metadata', 'questions', 'tab_switch_count', 'tab_switch_timestamps',
+        'tab_switch_time', 'exit_full_screen', 'role', 'summarized_JD'
+    ]
     missing_keys = [key for key in required_keys if key not in data]
     if missing_keys:
         return jsonify({"error": f"Missing required fields: {missing_keys}"}), 400
 
+    metadata = data.get('metadata')
+    candidate_id = metadata.get('candidate_id') if metadata else None
     questions = data.get("questions")
     tab_switch_count = data.get("tab_switch_count")
+    tab_switch_timestamps = data.get("tab_switch_timestamps")
+    tab_switch_time = data.get("tab_switch_time")
     exit_full_screen = data.get("exit_full_screen")
+    role = data.get("role")
+    summarized_JD = data.get("summarized_JD")
+
+    if not candidate_id:
+        return jsonify({"error": "candidate_id is required in metadata"}), 400
+
     task_ids = []
 
     for index, question in enumerate(questions, start=1):
@@ -60,15 +85,21 @@ def submit_data():
 
         task_id = str(uuid.uuid4())
         processing_tasks[task_id] = {"status": "processing"}
+
         thread = threading.Thread(
             target=process_video_in_thread,
-            args=(user_video_url, task_id, index, tab_switch_count, exit_full_screen)
+            args=(
+                user_video_url, task_id, index, candidate_id,
+                tab_switch_count, tab_switch_timestamps, tab_switch_time,
+                exit_full_screen
+            )
         )
         thread.daemon = True
         thread.start()
         task_ids.append(task_id)
 
-    return jsonify({"message": "Processing started", "task_ids": task_ids}), 202
+    return jsonify({
+        "message": "Processing started", "metadata": metadata, "task_ids": task_ids}), 202
 
 @api_blueprint.route('/task-status/<task_id>', methods=['GET'])
 @auth.login_required
