@@ -7,7 +7,7 @@ class JobDescriptionCreationService:
     
     
     @classmethod
-    async def job_summary_creation(cls,groq_client, lmodel, jobSummary):
+    async def createJobDescription(cls,groq_client, lmodel, jobSummary):
         try:
             prompt_template = await Helper.read_prompt("app/static/job_description_creation_prompt.txt")
             prompt = prompt_template.format(job_summary=jobSummary)

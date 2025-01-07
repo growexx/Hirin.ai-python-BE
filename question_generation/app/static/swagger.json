@@ -173,7 +173,7 @@
     },
     "/job-summarization": {
       "post": {
-        "summary": "Generate Job Summary",
+        "summary": "Create Job Summary",
         "operationId": "jobSummarization",
         "security": [
           {
@@ -235,33 +235,20 @@
       }
     },
     "schemas": {
-      "JobSummaryRequestDTO": {
+      "Metadata": {
         "type": "object",
         "properties": {
-          "job_summary": {
+          "candidateId": {
             "type": "string",
-            "description": "Job summary data"
+            "description": "Unique identifier for the candidate"
+          },
+          "other_field": {
+            "type": "string",
+            "description": "Optional additional metadata field",
+            "nullable": true
           }
         },
-        "required": ["job_summary"]
-      },
-      "JobSummaryResponseDTO": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "description": "Response status"
-          },
-          "job_summary": {
-            "type": "string",
-            "description": "Generated job summary"
-          },
-          "message": {
-            "type": "string",
-            "description": "Message describing the outcome"
-          }
-        },
-        "required": ["status", "job_summary"]
+        "required": ["candidateId"]
       },
       "JobDescriptionInputDTO": {
         "type": "object",
@@ -290,6 +277,43 @@
           }
         },
         "required": ["status"]
+      },
+      "JobSummaryRequestDTO": {
+        "type": "object",
+        "properties": {
+          "job_description_type": {
+            "type": "string",
+            "description": "Type of the job description (text or URL)"
+          },
+          "job_description": {
+            "type": "string",
+            "description": "Job description text"
+          },
+          "job_description_url": {
+            "type": "string",
+            "format": "url",
+            "description": "URL to the job description"
+          }
+        },
+        "required": ["job_description_type", "job_description", "job_description_url"]
+      },
+      "JobSummaryResponseDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Response status"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the outcome"
+          },
+          "job_summary": {
+            "type": "string",
+            "description": "Generated job summary"
+          }
+        },
+        "required": ["status", "job_summary"]
       },
       "Skill": {
         "type": "object",
