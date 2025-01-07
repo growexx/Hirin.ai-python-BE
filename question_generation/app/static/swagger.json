@@ -170,6 +170,61 @@
           }
         }
       }
+    },
+    "/job-summarization": {
+      "post": {
+        "summary": "Generate Job Summary",
+        "operationId": "jobSummarization",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobSummaryRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Job summary successfully generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummaryResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing fields",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "Please provide the missing field."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "An error occurred: <error message>"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -180,20 +235,33 @@
       }
     },
     "schemas": {
-      "Metadata": {
+      "JobSummaryRequestDTO": {
         "type": "object",
         "properties": {
-          "candidateId": {
+          "job_summary": {
             "type": "string",
-            "description": "Unique identifier for the candidate"
-          },
-          "other_field": {
-            "type": "string",
-            "description": "Optional additional metadata field",
-            "nullable": true
+            "description": "Job summary data"
           }
         },
-        "required": ["candidateId"]
+        "required": ["job_summary"]
+      },
+      "JobSummaryResponseDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Response status"
+          },
+          "job_summary": {
+            "type": "string",
+            "description": "Generated job summary"
+          },
+          "message": {
+            "type": "string",
+            "description": "Message describing the outcome"
+          }
+        },
+        "required": ["status", "job_summary"]
       },
       "JobDescriptionInputDTO": {
         "type": "object",
