@@ -10,7 +10,9 @@ from app.services.question_skill_level_creation_service import QuestionSkillLeve
 from app.services.question_generation_service import QuestionGenerationService
 from app.dto.job_desription_creation_dto import JobDescriptionInputDTO,JobDescriptionOutputDTO
 from app.dto.question_skill_creation_dto import QuestionSkillCreationInputDTO,QuestionSkillCreationOutputDTO
-from app.dto.question_generation_dto import QuestionGenerationInputDTO,QuestionGenerationOutputDTO
+from app.dto.question_generation_dto import QuestionGenerationInputDTO
+from app.dto.job_summary_dto import JobSummaryRequestDTO, JobSummaryResponseDTO
+from app.services.job_summary_service import JobSummaryCreationService
 
 
 api_blueprint = Blueprint('api', __name__)
@@ -143,3 +145,33 @@ async def question_generation():
             "status": "error",
             "message": f"An error occurred: {str(e)}"
         }), 500
+    
+
+@api_blueprint.route('/job-summarization', methods = ['POST'])
+@auth.login_required
+async def job_summarizattion():
+    try:
+
+        data = JobSummaryRequestDTO(**request.json)
+        if not data:
+             return jsonify({
+                "status": "error",
+                "message": "Please provide the missing field."
+            }), 400
+        
+        jobSummary = await JobSummaryCreationService.createJobSummary(groq_client,Models['GROQ_MODLE'],data)
+        return jsonify({
+            "status": "success",
+            "message": "summary generated successfully...",
+            "job_summary":jobSummary
+
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"An error occurred: {str(e)}"
+        }), 500
+
+
+

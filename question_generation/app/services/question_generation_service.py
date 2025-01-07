@@ -26,6 +26,7 @@ class QuestionGenerationService:
                     logger.info("Error: Unable to parse job description")
                     return None
                 
+                await Helper.delete_file(path)
                 jd_prompt = jd_summary_prompt_template.format(job_description=job_Description)
 
                 try:

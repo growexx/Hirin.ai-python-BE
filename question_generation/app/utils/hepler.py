@@ -2,6 +2,7 @@ from app.logger_config import logger
 import aiofiles
 import json
 import re
+import os
 
 
 class Helper:
@@ -120,6 +121,18 @@ class Helper:
             return updated_output.strip(), mismatched_skills, expected_questions, mismatched_proficiency
         except Exception as e:
             logger.error(f"Error occured while remove extra question : {e}")
+   
+    async def delete_file(file_path):
+        if os.path.exists(file_path):
+            try:
+                async with aiofiles.open(file_path, 'r'):
+                    pass
+                os.remove(file_path)
+                logger.info(f"File {file_path} has been deleted.")
+            except Exception as e:
+                logger.info(f"Error deleting file {file_path}: {e}")
+        else:
+            logger.info(f"File {file_path} does not exist.")
     
 
     
