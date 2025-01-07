@@ -121,8 +121,9 @@ class Helper:
             return updated_output.strip(), mismatched_skills, expected_questions, mismatched_proficiency
         except Exception as e:
             logger.error(f"Error occured while remove extra question : {e}")
-   
-    async def delete_file(file_path):
+    
+    @classmethod
+    async def delete_file(cls,file_path):
         if os.path.exists(file_path):
             try:
                 async with aiofiles.open(file_path, 'r'):
