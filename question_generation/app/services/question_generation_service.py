@@ -13,7 +13,7 @@ class QuestionGenerationService:
         try:
 
             jd_summary_prompt_template = await Helper.read_prompt("app/static/job_summary_prompt.txt")
-            questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
+            # questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
             jd_prompt = ''
 
             if isText:
@@ -66,11 +66,11 @@ class QuestionGenerationService:
             sumQuestionsPerSkill = sum(noOfQuestion)
             print(f"sumQuestionsPerSkill:{sumQuestionsPerSkill}")
 
-            # if int(totalTime) == 0:
-            #     # questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_withouttime_prompt.txt")
-            #     questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration="",sumquestionsPerSkill=sumQuestionsPerSkill)
-            # else:
-            #     # questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
+            if int(totalTime) == 0:
+                questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_withouttime_prompt.txt")
+                questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration="",sumquestionsPerSkill=sumQuestionsPerSkill)
+            else:
+                questionGenerationPromptTemplate = await Helper.read_prompt("app/static/question_generation_prompt.txt")
 
             questionGenerationPrompt = questionGenerationPromptTemplate.format(SJD=jdSummary,keySkills=skillName,proficiencyLevel=skillLevel,questionsPerSkill=noOfQuestion,interview_duration=totalTime,sumquestionsPerSkill=sumQuestionsPerSkill)
             questionsIntermediate = LLMClient.GroqLLM(groq_client, questionGenerationPrompt, lmodel)
