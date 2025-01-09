@@ -1,30 +1,33 @@
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import Docx2txtLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from app.logger_config import logger
+from app.utils.logger_config import logger
 
 class GetText:
     
     @classmethod
     @staticmethod
-    def getText(filePath):
-       description = ""
-       print("file name : ",filePath)
-       
-       if filePath.lower().endswith(".pdf"):
-        loader=PyPDFLoader(filePath)
-        documents=loader.load()
-        print("documents : ",documents)
-        total_pages = len(documents)
-        print("Total pages : ", total_pages)
-       elif filePath.lower().endswith(".docx"):
-            loader=Docx2txtLoader(filePath)
-            documents=loader.load()
-            print("documents : ",documents)
-            total_pages = len(documents)
-            print("Total pages : ", total_pages)
-            
-       for doc in documents:
-        description += doc.page_content
-    
-       return description
+    def getText(cls,filePath):
+       try:
+          description = ""
+          logger.info(f"file name : {filePath}")
+          
+          if filePath.lower().endswith(".pdf"):
+              loader=PyPDFLoader(filePath)
+              documents=loader.load()
+              logger.info(f"documents : {documents}")
+              total_pages = len(documents)
+              logger.info(f"Total pages : {total_pages}")
+          elif filePath.lower().endswith(".docx"):
+               loader=Docx2txtLoader(filePath)
+               documents=loader.load()
+               logger.info(f"documents : {documents}")
+               total_pages = len(documents)
+               logger.info(f"Total pages : {total_pages}")
+               
+          for doc in documents:
+              description += doc.page_content
+     
+          return description
+       except Exception as e:
+           logger.error(f"Error occured while text conversion: {e}")
+           return None
