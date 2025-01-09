@@ -47,7 +47,7 @@ class ResumeRelevanceScorProcessor:
                 if message is None:
                     break
 
-                message_body = message['Body']
+                message_body = message['Message']
                 try:
                     message_data = json.loads(message_body)
                     logger.info(f"Decoded message data: {message_data}")
