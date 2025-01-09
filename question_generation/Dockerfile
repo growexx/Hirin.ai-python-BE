@@ -1,5 +1,14 @@
 FROM python:3.13-alpine
 
+# Install build dependencies
+RUN apk add --no-cache \
+    build-base \
+    linux-headers \
+    meson \
+    ninja \
+    gfortran \
+    openblas-dev
+
 WORKDIR /app
 
 COPY . .
