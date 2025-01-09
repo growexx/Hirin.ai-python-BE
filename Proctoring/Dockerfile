@@ -22,7 +22,7 @@ RUN useradd -M appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Expose the application port
-EXPOSE 5009
+#EXPOSE 5009
 
 # Run the application
 CMD ["python3", "app/main.py"]
