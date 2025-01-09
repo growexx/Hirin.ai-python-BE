@@ -1,4 +1,4 @@
-FROM python:3.13-alpine
+FROM 719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin:python3.13-alpine
 
 # Install build dependencies
 RUN apk add --no-cache \
