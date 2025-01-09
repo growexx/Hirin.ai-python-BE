@@ -1,4 +1,4 @@
-FROM python:3.10.12-alpine
+FROM 719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin:python3.10.12-alpine
 
 WORKDIR /app
 
