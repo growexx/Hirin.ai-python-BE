@@ -37,7 +37,7 @@ class QueueProcessor:
                 
                 while True:
                     messages = await SQSMessage.receive_messages(sqs,self.queueUrl,10,5)
-
+                    
                     if not messages:
                         print("No messages received. Exiting.")
                         break

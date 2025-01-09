@@ -13,7 +13,7 @@ WORKDIR /app
 COPY . .
 
 # Install Python dependencies without cache
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r app/requirements.txt
 
 # Create a non-root user and set appropriate permissions
 RUN useradd -M appuser && chown -R appuser:appuser /app
@@ -25,4 +25,6 @@ USER appuser
 #EXPOSE 5009
 
 # Run the application
+
 CMD ["python3", "main.py"]
+
