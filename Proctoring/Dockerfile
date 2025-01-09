@@ -1,4 +1,4 @@
-FROM python:3.10.12-slim
+FROM 719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin:python3.10.12-slim
 
 # Install necessary dependencies for OpenCV and clean up apt cache
 RUN apt-get update && apt-get install -y \
@@ -22,7 +22,7 @@ RUN useradd -M appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Expose the application port
-EXPOSE 5009
+#EXPOSE 5009
 
 # Run the application
-CMD ["python3", "run.py"]
+CMD ["python3", "main.py"]
