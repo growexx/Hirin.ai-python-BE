@@ -46,15 +46,24 @@ class ResumeRelevanceScorProcessor:
                 message= await task_queue.get()
                 if message is None:
                     break
+                
+                message_body = message['Body']
 
-                message_body = message['Message']
                 try:
-                    message_data = json.loads(message_body)
+                    messageData = json.loads(message_body)
+                    logger.info(f"Decoded message data: {messageData}")
+                except json.JSONDecodeError as e:
+                        logger.error(f"Error decoding JSON: {e}")
+
+                logger.info(f"message_data : {messageData}")
+                actualMessageBody = messageData['Message']
+
+                try:
+                    message_data = json.loads(actualMessageBody)
                     logger.info(f"Decoded message data: {message_data}")
                 except json.JSONDecodeError as e:
                         logger.error(f"Error decoding JSON: {e}")
 
-                logger.info(f"message_data : {message_data}")
                 jobDescriptionPromptTemplate = await Helper.read_prompt('app/static/JobSummaryPrompt.txt')
                 resumePath = await BucketReadService.download_file_from_s3(message_data['resume_url'],'app/static/Resume/')
 

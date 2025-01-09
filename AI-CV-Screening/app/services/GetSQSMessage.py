@@ -13,7 +13,8 @@ class SQSMessage:
                 WaitTimeSeconds=waitTime,
                 MessageAttributeNames=['cv_screening_event']
             )
-            return response.get('Messages', [])
+            messages = response.get('Messages', [])
+            return messages
         except Exception as e:
             logger.info(f"Error while reading message from queue: {e}")
             return None
