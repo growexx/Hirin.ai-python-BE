@@ -13,7 +13,7 @@ from app.dto.question_skill_creation_dto import QuestionSkillCreationInputDTO,Qu
 from app.dto.question_generation_dto import QuestionGenerationInputDTO
 from app.dto.job_summary_dto import JobSummaryRequestDTO, JobSummaryResponseDTO
 from app.services.job_summary_service import JobSummaryCreationService
-
+from groq import AsyncGroq
 
 api_blueprint = Blueprint('api', __name__)
 
@@ -41,16 +41,10 @@ except Exception as e:
 try:
     openai_client = OpenAI(api_key=API_KEYS["OPENAI_API_KEY"])
     groq_client = Groq(api_key=API_KEYS["GROQ_API_KEY"])
+    async_groq_client = AsyncGroq(api_key=API_KEYS["GROQ_API_KEY"])
 except Exception as e:
     logger.error(f"Failed to initialize API clients: {e}")
     raise
-
-try:
-   openai_client = OpenAI(api_key=API_KEYS["OPENAI_API_KEY"])
-   groq_client = Groq(api_key=API_KEYS["GROQ_API_KEY"])
-except Exception as e:
-   logger.error(f"Failed to initialize API clients: {e}")
-   raise
 
 
 
@@ -62,7 +56,7 @@ users = {
 def verify_password(username, password):
     if users.get(username) == password:
         return username
-    
+
 
 @api_blueprint.route('/create-job-description',methods=['POST'])
 @auth.login_required
@@ -75,21 +69,21 @@ async def job_description_creation():
                 "status": "error",
                 "message": "Please provide the missing field."
             }), 400
-          
-          job_description = await JobDescriptionCreationService.createJobDescription(groq_client,Models['GROQ_MODLE'],job_summary) 
+
+          job_description = await JobDescriptionCreationService.createJobDescription(groq_client,Models['GROQ_MODLE'],job_summary)
           response = JobDescriptionOutputDTO(
             status="success",
             job_description=job_description
         )
           return jsonify(response.model_dump()), 200
-     
-               
+
+
      except Exception as e:
           return jsonify({
             "status": "error",
             "message": f"An error occurred: {str(e)}"
         }), 500
-     
+
 
 @api_blueprint.route('/create-complexity-skills',methods= ['POST'])
 @auth.login_required
@@ -101,7 +95,7 @@ async def skills_no_questions_creation():
                 "status": "error",
                 "message": "Please provide the missing field."
             }), 400
-        
+
         questionSkillLevel = await QuestionSkillLevelCreationService.questionskillcreation(groq_client,Models['GROQ_MODLE'],data.job_description,data.total_questions,data.interview_duration,data.job_description_type)
         response = QuestionSkillCreationOutputDTO(
         status="success",
@@ -110,7 +104,7 @@ async def skills_no_questions_creation():
         questions_per_skill=questionSkillLevel['questionsPerSkill'],
         message="Data successfully processed.")
 
-        return jsonify(response.model_dump()), 200 
+        return jsonify(response.model_dump()), 200
 
     except Exception as e:
         return jsonify({
@@ -129,8 +123,8 @@ async def question_generation():
                 "status": "error",
                 "message": "Please provide the missing field."
             }), 400
-        
-        questions = await QuestionGenerationService.questionGeneration(groq_client,Models['GROQ_MODLE'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time)
+
+        questions = await QuestionGenerationService.questionGeneration(groq_client,async_groq_client,Models['GROQ_MODLE'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time)
 
         return jsonify({
             "status": "success",
@@ -138,14 +132,14 @@ async def question_generation():
             "question":questions
 
         }), 200
-        
-        
+
+
     except Exception as e:
         return jsonify({
             "status": "error",
             "message": f"An error occurred: {str(e)}"
         }), 500
-    
+
 
 @api_blueprint.route('/job-summarization', methods = ['POST'])
 @auth.login_required
@@ -158,7 +152,7 @@ async def job_summarizattion():
                 "status": "error",
                 "message": "Please provide the missing field."
             }), 400
-        
+
         jobSummary = await JobSummaryCreationService.createJobSummary(groq_client,Models['GROQ_MODLE'],data)
         return jsonify({
             "status": "success",
@@ -166,7 +160,7 @@ async def job_summarizattion():
             "job_summary":jobSummary
 
         }), 200
-        
+
     except Exception as e:
         return jsonify({
             "status": "error",

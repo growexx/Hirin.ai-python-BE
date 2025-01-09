@@ -1,57 +1,48 @@
-Task: Based on the provided job description and input data, generate a precise set of interview questions to assess the candidate's suitability for the given role.
- 
-### **Critical Constraints**
-- The total number of questions must exactly match {sumquestionsPerSkill}.
-- For each skill, the number of questions must strictly align with the value in `questionsPerSkill`.
- 
----
- 
-### **Job Description**:
-{SJD}
- 
-### **Input Data**:
-- Key Skills: {keySkills}
-- Proficiency Levels: {proficiencyLevel}
-- Questions Per Skill: {questionsPerSkill}
-- Interview Duration: {interview_duration} minutes
- 
----
- 
-### **Instructions**:
- 
-1. **Generate Questions**:
+Task: Based on the provided job description and additional input data, generate a set of relevant interview questions that assess the candidate's suitability for the given role in an online interview setting.
+
+Job Description: {SJD}
+
+Input Data:
+keySkills: {keySkills}
+proficiencyLevel: {proficiencyLevel}
+questionsPerSkill: {questionsPerSkill}
+interviewDuration: {interview_duration} minutes
+
+Instructions:
+
+1. **Generate Questions for Each Skill**:
     - For each skill in `keySkills`, generate the exact number of questions specified in `questionsPerSkill`.
-    - Ensure each question matches the specified proficiency level:
-        - Beginner: Foundational or conceptual.
-        - Intermediate: Applied or scenario-based.
-        - Expert: Deep technical or strategic.
- 
-2. **Validation Steps**:
-    - Check that the total number of questions equals {sumquestionsPerSkill}.
-    - Confirm the number of questions per skill matches the corresponding value in `questionsPerSkill`.
-    - Adjust by strictly adding or removing questions if any mismatch is detected.
- 
-3. **Question Output Format**:
-    - Question Number [n]: [Write the question]
-    - Estimated Time: [X minutes] (1-5 minutes per question)
-    - Level of Difficulty: [Beginner/Intermediate/Expert]
-    - Key Skill: [Skill being assessed]
-    - Question Type: [Expertise-focused/Analytical Thinking]
- 
-4. **Prohibited Question Types**:
-    - Avoid coding, scripting, or SQL questions.
-    - No syntax/code examples required.
- 
-5. **Final Validation**:
-    - STRICTLY ENSURE:
-        - Total number of questions = {sumquestionsPerSkill}.
-        - Distribution across skills matches `questionsPerSkill`.
-        - Total time for all questions should not be greater than {interview_duration} minutes.
-    - Only finalize if all checks pass.
- 
----
- 
-**Reminder**:
-- DO NOT INCLUDE COMMENTARY OR EXTRA NOTES.
-- FOLLOW THE OUTPUT FORMAT STRICTLY.
-- RELY ONLY ON THE GIVEN DATA AND JOB DESCRIPTION.
+    - Do not repeat the questions.
+    - Match the complexity of each question to the specified proficiency level for the skill:
+        - Beginner: Foundational or conceptual questions.
+        - Intermediate: Applied or scenario-based questions.
+        - Expert: Deeply technical or strategic questions.
+
+2. **Validation Logic**:
+    - **Step 1**: Count the total number of generated questions.
+    - **Step 2**: Compare the total count of questions to the sum of `questionsPerSkill`. Total questions = {sumquestionsPerSkill}.
+        - If the total count does not match, adjust by adding or removing questions to strictly align with the input.
+    - **Step 3**: For each skill, confirm the number of generated questions matches the corresponding value in `questionsPerSkill`. If it does not match:
+        - Add or remove questions for that skill as needed.
+        - Ensure all adjusted questions are relevant and match the specified proficiency level.
+
+3. **Output Format**:
+    Question Number [n]: [Write the question]
+    Estimated Time: [X minutes] (Use 1-5 minutes per question as a guideline.)
+    Level of Difficulty: [Should be as per proficiencyLevel for that skill] (Beginner / Intermediate / Expert)
+    Key Skill: [Skill being assessed]
+    Question Type: [Expertise-focused/Analytical Thinking]
+
+**Prohibited Question Types**:
+- Avoid coding, scripting, or SQL query questions during the interview.
+- Avoid requiring specific syntax or code examples as part of the answer.
+
+4. **Final Validation Before Completion**:
+    - **Strictly ensure**:
+        - The total number of questions equals {sumquestionsPerSkill}.
+        - The distribution of questions across skills matches `questionsPerSkill`.
+    - Only finalize the output if all validation checks pass.
+
+**Additional Instructions**:
+- DO NOT INCLUDE ANY ADDITIONAL COMMENTARY OR NOTES IN RESPONSE.
+- STRICTLY FOLLOW THE OUTPUT FORMAT PROVIDED.
