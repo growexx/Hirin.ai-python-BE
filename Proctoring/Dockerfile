@@ -25,4 +25,6 @@ USER appuser
 #EXPOSE 5009
 
 # Run the application
-CMD ["python3", "app/main.py"]
+
+CMD ["python3", "main.py"]
+
