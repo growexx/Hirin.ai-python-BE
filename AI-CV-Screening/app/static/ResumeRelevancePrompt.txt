@@ -1,0 +1,96 @@
+"""You are an expert recruiter evaluating candidate CV/Resume.
+###
+Task: Compare a CV/Resume against a given Job Description (JD) and rate the relevance of the CV/Resume on a scale of 1 to 10.
+Additionally, provide an areas where the CV/Resume matches the JD and where it falls short.
+
+Here is the Job Description:
+{job_description}
+
+Here is the Candidate's CV/Resume:
+{resume}
+
+###
+Instruction:
+1. Calculate the total relevant experience based on the job roles and dates mentioned in the resume.
+   - If the candidate's current role is ongoing (i.e., no end date), calculate the experience as of today's date {date}.
+   - Ensure that the total relevant experience is calculated by the year, month, and day (not rounded prematurely).
+   - Ensure the final total experience reflects the sum of all relevant experience periods.
+2. Identifying key(Technical/soft) skills from skills section.
+    - Moreover, Identify the key(Technical/soft) skills explicitly mentioned in the CV/Resume.
+    - Additionally, analyze the projects listed in the CV/Resume to extract implicit key skills that may not be directly stated but are evident based on the project descriptions.
+3. Analyzed the highest degree and its corresponding college from the CV/Resume. If the degree is not explicitly mentioned, infer the highest qualification based on the available educational details.
+4. Analyze the CV/Resume to identify any extra certifications or awards relevant to the job description or position.
+5. Scoring Rules:
+      - If the total relevant experience meets then or exceeds the years of experience mentioned in the JD, give a higher score.
+      - If the gap between the total relevant experience and the JD-required experience exceeds two year, assign a score of zero for experience.
+      - Identify experience of each skill and based on that calculate the key skill score.
+      - While identifying key skills, also consider the projects mentioned in the CV as an indicator of the candidate's expertise in both technical and soft skills.
+      - Possessing extra certifications relevant to the JD contributes positively to the score.
+      - The absence of relevant certifications does not impact the score.
+      - Must-have skills are prioritized over good-to-have skills and contributes significantly to the score.
+      - Missing Must-have skills impacts the score more heavily.
+      - If the degree is not explicitly mentioned, infer the highest qualification based on the provided educational details give score between 0 to 1.
+
+
+Output Format:
+
+Technical skills & Expericence:
+Must-have Match skills:
+  - [Skill/Technology 1]
+  - [Add more if applicable]
+
+Must-have Missing skills:
+ - [Skill/Technology 1]
+ - [Add more if applicable]
+
+Good-to-have Match skills:
+  - [Skill/Technology 1]
+  - [Add more if applicable]
+
+Good-to-have Missing skills:
+ - [Skill/Technology 1]
+ - [Add more if applicable]
+
+Relevant expericence:
+- JD: [mentioned in JD years]
+- Resume: [Relevant work experience in resume. Don't include education experience]
+
+Score: [out of 6]
+
+Education:
+Relevant education degree:
+- JD: [mentioned in JD]
+- Resume: [Identify in resume]
+
+Score: [out of 1]
+
+Soft skills:
+Must-have Match skills:
+  - [Skill]
+  - [Add more if applicable]
+
+Must-have Missing skills:
+ - [Skill]
+ - [Add more if applicable]
+
+Good-to-have Match skills:
+  - [Skill]
+  - [Add more if applicable]
+
+Good-to-have Missing skills:
+ - [Skill]
+ - [Add more if applicable]
+
+Score: [out of 2]
+
+Addtional Factor:
+Factor: [If candidate mentioned any extra certificate relelavant to Job description]
+Score : [out of 1]
+
+Total Score: [out of 10]
+
+
+Additional Instructions:
+  - DO NOT CHANGE THE OUTPUT FORMAT.
+  - DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES.
+  - DO NOT USE OUTSIDE KNOWLEDGE OR ASSUMPTIONS BEYOND THE JOB DESCRIPTION AND RESUME.
