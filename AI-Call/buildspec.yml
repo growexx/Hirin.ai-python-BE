@@ -1,0 +1,42 @@
+version: 0.2
+environment_variables:
+  plaintext:
+    S3_BUCKET: "nodejsartifact"
+    repository_url: "719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-ai-call-python-dev-repository" 
+phases:
+  pre_build:
+    commands:
+      - echo `aws --version`
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 719056139938.dkr.ecr.us-east-2.amazonaws.com
+      - REPOSITORY_URI=719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-ai-call-python-dev-repository
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - echo Entered the pre_build phase...
+      - ls
+      - cd  AI-Call
+      - ls
+      - rm -rf config.ini
+      - aws s3 cp s3://nodejsartifact/hirin-ai-call-python-dev/config/config.ini .
+      - ls 
+  build:
+    commands:
+      - docker build -f Dockerfile -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - cd ..
+      - echo Writing image definitions file...  
+      - printf '[{"name":"hirin-ai-call-dev-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+                           
+cache:
+  paths:
+    - '/root/.cache/docker/**/*'
+    - '/root/.cache/pip/**/*'
+    
+artifacts:
+  files: imagedefinitions.json
