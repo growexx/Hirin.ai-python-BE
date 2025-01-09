@@ -208,7 +208,7 @@ class QuestionGenerationService:
                     sumquestionsPerSkill=sum(chunk[1])
                 )
                 logger.info(chunk)
-                logger.info(prompt)
+                #logger.info(prompt)
                 prompts.append(prompt)
 
             # Asynchronous API calls
@@ -216,7 +216,7 @@ class QuestionGenerationService:
             responses = await asyncio.gather(*tasks)
 
             # Validation and re-run logic
-            retries = 2
+            retries = 3
             for _ in range(retries):
                 re_run_indices = []
                 for idx, (response, chunk) in enumerate(zip(responses, chunks)):
@@ -229,7 +229,7 @@ class QuestionGenerationService:
                     break
 
                 re_run_prompts = [prompts[i] for i in re_run_indices]
-                re_run_tasks = [LLMClient.call_groq_llm(groq_client, prompt, lmodel) for prompt in re_run_prompts]
+                re_run_tasks = [LLMClient.call_groq_llm(async_groq_client, prompt, lmodel) for prompt in re_run_prompts]
                 re_run_responses = await asyncio.gather(*re_run_tasks)
 
                 for idx, response in zip(re_run_indices, re_run_responses):
