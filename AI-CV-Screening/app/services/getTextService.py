@@ -5,7 +5,6 @@ from app.utils.logger_config import logger
 class GetText:
     
     @classmethod
-    @staticmethod
     def getText(cls,filePath):
        try:
           description = ""
