@@ -13,7 +13,7 @@ WORKDIR /app
 COPY . .
 
 # Install Python dependencies without cache
-RUN pip install --no-cache-dir -r app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Create a non-root user and set appropriate permissions
 RUN useradd -M appuser && chown -R appuser:appuser /app
