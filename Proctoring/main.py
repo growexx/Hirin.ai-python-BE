@@ -9,7 +9,7 @@ from logger.logger_config import logger
 
 # Load configuration from config.ini
 config = configparser.ConfigParser()
-config.read('app/config.ini')
+config.read('config.ini')
 
 # AWS Configuration
 AWS_REGION = config['aws']['region']
