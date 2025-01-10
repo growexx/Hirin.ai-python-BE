@@ -16,7 +16,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create a non-root user and set appropriate permissions
-RUN useradd -M appuser && chown -R appuser:appuser /app
+RUN useradd -M -d /app appuser && chown -R appuser:appuser /app
 
 # Switch to the non-root user
 USER appuser
