@@ -9,7 +9,8 @@ class QueueProcessor:
     def __init__(self,  batch_size=10, num_workers=5):
         try:
 
-            self.queueUrl = Config.get('SQS','queue_url')         
+            self.queueUrl = Config.get('SQS','queue_url')
+            self.AWS_REGION = Config.get('AWS','region')       
             self.batch_size = batch_size
             self.num_workers = num_workers
 
