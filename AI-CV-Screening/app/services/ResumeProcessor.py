@@ -25,7 +25,7 @@ class ResumeRelevanceScorProcessor:
             self.OPENAI_MODEL = Config.get('OPENAI','model')
             self.SNS_ARN = Config.get('SNS','sns_arn')
             self.AWS_REGION = Config.get('AWS','region')
-            self.bdModel = Config.get('BEDROCK','model'),
+            self.bdModel = Config.get('BEDROCK','model')
             
         except Exception as e:
             logger.error(f"Error occured while reading the configuration")
