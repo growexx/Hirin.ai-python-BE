@@ -114,7 +114,7 @@ from app.services.getTextService import GetText
 class QuestionGenerationService:
 
     @classmethod
-    async def questionGeneration(cls, groq_client, async_groq_client, lmodel, jobDescription, jobDescriptionUrl, isText, skills, totalTime):
+    async def questionGeneration(cls,bdClient, lmodel, jobDescription, jobDescriptionUrl, isText, skills, totalTime,region):
         try:
             # Job description handling (Blocks 3 and 4)
             jd_summary_prompt_template = await Helper.read_prompt("app/static/job_summary_prompt.txt")
@@ -142,7 +142,7 @@ class QuestionGenerationService:
                 except Exception as e:
                     print(f"An error occurred: {e}")
 
-            jdSummary = LLMClient.GroqLLM(groq_client, jd_prompt, lmodel)
+            jdSummary = LLMClient.BedRockLLM(bdClient, jd_prompt, lmodel)
 
             if not jdSummary:
                 logger.info("Error: Unable to summarized job description.")
@@ -212,7 +212,7 @@ class QuestionGenerationService:
                 prompts.append(prompt)
 
             # Asynchronous API calls
-            tasks = [LLMClient.call_groq_llm(async_groq_client, prompt, lmodel) for prompt in prompts]
+            tasks = [LLMClient.AsyncBedRockLLM(prompt, lmodel,region) for prompt in prompts]
             responses = await asyncio.gather(*tasks)
 
             # Validation and re-run logic
@@ -229,7 +229,7 @@ class QuestionGenerationService:
                     break
 
                 re_run_prompts = [prompts[i] for i in re_run_indices]
-                re_run_tasks = [LLMClient.call_groq_llm(async_groq_client, prompt, lmodel) for prompt in re_run_prompts]
+                re_run_tasks = [LLMClient.AsyncBedRockLLM( prompt, lmodel,region) for prompt in re_run_prompts]
                 re_run_responses = await asyncio.gather(*re_run_tasks)
 
                 for idx, response in zip(re_run_indices, re_run_responses):

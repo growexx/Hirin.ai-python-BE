@@ -14,6 +14,8 @@ from app.dto.question_generation_dto import QuestionGenerationInputDTO
 from app.dto.job_summary_dto import JobSummaryRequestDTO, JobSummaryResponseDTO
 from app.services.job_summary_service import JobSummaryCreationService
 from groq import AsyncGroq
+import boto3
+
 
 api_blueprint = Blueprint('api', __name__)
 
@@ -26,11 +28,13 @@ except Exception as e:
 
 
 try:
+    region = Config.get('BEDROCK','region')
     API_KEYS = {
         "OPENAI_API_KEY": Config.get('Openapi','api_key'),
         "GROQ_API_KEY": Config.get('Groq','api_key')
     }
     Models = {
+        "BEDROCK_MODEL": Config.get('BEDROCK','model'),
         "OPENAI_MODLE": Config.get('Openapi','model'),
         "GROQ_MODLE" : Config.get('Groq','lModel')
     }
@@ -42,6 +46,11 @@ try:
     openai_client = OpenAI(api_key=API_KEYS["OPENAI_API_KEY"])
     groq_client = Groq(api_key=API_KEYS["GROQ_API_KEY"])
     async_groq_client = AsyncGroq(api_key=API_KEYS["GROQ_API_KEY"])
+    
+    bd_client = boto3.client("bedrock-runtime",
+        region_name = region)
+
+
 except Exception as e:
     logger.error(f"Failed to initialize API clients: {e}")
     raise
@@ -70,13 +79,12 @@ async def job_description_creation():
                 "message": "Please provide the missing field."
             }), 400
 
-          job_description = await JobDescriptionCreationService.createJobDescription(groq_client,Models['GROQ_MODLE'],job_summary)
+          job_description = await JobDescriptionCreationService.createJobDescription(bd_client,Models['BEDROCK_MODEL'],job_summary)
           response = JobDescriptionOutputDTO(
             status="success",
             job_description=job_description
         )
           return jsonify(response.model_dump()), 200
-
 
      except Exception as e:
           return jsonify({
@@ -96,7 +104,7 @@ async def skills_no_questions_creation():
                 "message": "Please provide the missing field."
             }), 400
 
-        questionSkillLevel = await QuestionSkillLevelCreationService.questionskillcreation(groq_client,Models['GROQ_MODLE'],data.job_description,data.total_questions,data.interview_duration,data.job_description_type)
+        questionSkillLevel = await QuestionSkillLevelCreationService.questionskillcreation(bd_client,Models['BEDROCK_MODEL'],data.job_description,data.total_questions,data.interview_duration,data.job_description_type)
         response = QuestionSkillCreationOutputDTO(
         status="success",
         key_skills=questionSkillLevel['keySkills'],
@@ -124,7 +132,7 @@ async def question_generation():
                 "message": "Please provide the missing field."
             }), 400
 
-        questions = await QuestionGenerationService.questionGeneration(groq_client,async_groq_client,Models['GROQ_MODLE'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time)
+        questions = await QuestionGenerationService.questionGeneration(bd_client, Models['BEDROCK_MODEL'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time,region)
 
         return jsonify({
             "status": "success",
@@ -153,7 +161,7 @@ async def job_summarizattion():
                 "message": "Please provide the missing field."
             }), 400
 
-        jobSummary = await JobSummaryCreationService.createJobSummary(groq_client,Models['GROQ_MODLE'],data)
+        jobSummary = await JobSummaryCreationService.createJobSummary(bd_client,Models['BEDROCK_MODEL'],data)
         return jsonify({
             "status": "success",
             "message": "summary generated successfully...",

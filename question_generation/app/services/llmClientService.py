@@ -1,6 +1,10 @@
 from app.logger_config import logger
 import asyncio
 from groq import AsyncGroq
+import aiobotocore
+from aiobotocore.session import AioSession
+import json
+import boto3
 
 class LLMClient:
     @classmethod
@@ -53,3 +57,52 @@ class LLMClient:
             messages=[{"role": "system","content": prompt}])
 
         return llm_response.choices[0].message.content
+    
+
+    @classmethod
+    async def AsyncBedRockLLM(cls, prompt, model,region):
+        try:
+        
+            session = AioSession()
+            async with session.create_client('bedrock-runtime', 
+                region_name = region) as client:
+                
+                request_body = json.dumps({"prompt": prompt})
+                response = await client.invoke_model(
+                modelId=model,
+                accept='application/json',
+                body=request_body
+            )
+          
+            result = await response['body'].read()
+            resultText = result.decode('utf-8')
+            resultJson = json.loads(resultText)
+            return resultJson['generation']
+
+
+        except Exception as e:
+            logger.error(f"Failed to generate result using Bedrock: {e}")
+            return "Error in BedRock client"
+        
+    
+    @classmethod
+    def BedRockLLM(cls,client, prompt, model):
+        try:
+             
+            model_id = model
+            conversation = [{
+                "role": "user",
+                "content": [{"text": prompt}],
+                }]
+          
+            response = client.converse(
+                modelId=model_id,
+                messages=conversation,
+                )
+            
+            response_text = response["output"]["message"]["content"][0]["text"]
+            return response_text
+
+        except Exception as e:
+            logger.error(f"Failed to generate result using Bedrock: {e}")
+            return "Error in BedRock client"
