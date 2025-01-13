@@ -100,16 +100,16 @@ class ResumeRelevanceScorProcessor:
                     if lammaRelevanceSummary:
                         relevanceSummary = Helper.output_formatter(lammaRelevanceSummary,message_data['metadata'])
                         subject = "CV - screening"
-                        response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
+                        response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.AWS_REGION,self.SNS_ARN)
                         if response:
                             print(f"response:{response}")
-                            await SQSMessage.delete_message(message,sqsUrl,self.region)
+                            await SQSMessage.delete_message(message,sqsUrl,self.AWS_REGION)
                         
                             
                     else:
                         error = f"unable to process the cv for {message_data['metadata']}"
                         subject = "CV - screening"
-                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
+                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.AWS_REGION,self.SNS_ARN)
 
                         
                     # openAIJDSummary=LLMClient.OpenAILLM(self.OPENAI_KEYClient,prompt,self.OPENAI_MODEL)
@@ -140,16 +140,16 @@ class ResumeRelevanceScorProcessor:
                     if lammaRelevanceSummary:
                         relevanceSummary = Helper.output_formatter(lammaRelevanceSummary,message_data['metadata'])
                         subject = "CV - screening"
-                        response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
+                        response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.AWS_REGION,self.SNS_ARN)
                         if response:
                             print(f"response:{response}")
-                            await SQSMessage.delete_message(message,sqsUrl,self.region)
+                            await SQSMessage.delete_message(message,sqsUrl,self.AWS_REGION)
                         
                             
                     else:
                         error = f"unable to process the cv for {message_data['metadata']}"
                         subject = "CV - screening"
-                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
+                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.AWS_REGION,self.SNS_ARN)
                     
 
                     # openAIJDSummary=LLMClient.OpenAILLM(self.OPENAI_KEYClient,prompt,self.OPENAI_MODEL)
