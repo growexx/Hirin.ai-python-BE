@@ -19,3 +19,4 @@ Guidelines:
 - Format the output professionally with clean structure in *MarkDown* language and logical flow. 
 - Tailor the tone to match the job's industry and target audience. 
 - Ensure clarity, relevance, and precision in all sections.
+- OUTPUT FORMAT MUST BE FOLLOWED.

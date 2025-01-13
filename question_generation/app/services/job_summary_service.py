@@ -27,7 +27,7 @@ class JobSummaryCreationService:
                 job_description = jobData.job_description
 
             prompt = prompt_template.format(job_description=job_description) 
-            job_description = LLMClient.GroqLLM(groqClient, prompt, lModel)
+            job_description = LLMClient.BedRockLLM(groqClient, prompt, lModel)
             
             if not job_description:
                 logger.info("Error: No job summary generated.")

@@ -9,7 +9,7 @@ import os
 class QuestionSkillLevelCreationService:
   
     @classmethod
-    async def questionskillcreation(cls, groq_client, lmodel, jobDescription,totalQuestion,interviewDuration,job_description_type):
+    async def questionskillcreation(cls,client, Bdmodel, jobDescription,totalQuestion,interviewDuration,job_description_type):
         try:
 
             totalQuestionByTwo = int(totalQuestion // 2)
@@ -39,7 +39,7 @@ class QuestionSkillLevelCreationService:
                     print(f"An error occurred: {e}")
                 
 
-            questionSkill = LLMClient.GroqLLM(groq_client, prompt, lmodel)            
+            questionSkill = LLMClient.BedRockLLM(client,prompt, Bdmodel)            
             questionSkill = Helper.standardize_llm_response(questionSkill)
         
             if not questionSkill:
