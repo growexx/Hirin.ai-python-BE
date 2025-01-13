@@ -12,6 +12,7 @@ from groq import Groq
 from openai import OpenAI
 from datetime import datetime
 from app.services.SNSService import SNSSender
+import boto3
 
 
 class ResumeRelevanceScorProcessor:
@@ -23,17 +24,20 @@ class ResumeRelevanceScorProcessor:
             self.OPENAI_KEY = Config.get('OPENAI','api_key')
             self.OPENAI_MODEL = Config.get('OPENAI','model')
             self.SNS_ARN = Config.get('SNS','sns_arn')
+            self.AWS_REGION = Config.get('AWS','region')
+            self.bdModel = Config.get('BEDROCK','model'),
             
         except Exception as e:
             logger.error(f"Error occured while reading the configuration")
         try:
             self.groqClient = Groq(api_key=self.GROQ_KEY)
             self.openAIClient = OpenAI(api_key=self.OPENAI_KEY)
+            self.bd_client = boto3.client("bedrock-runtime",region_name = self.AWS_REGION)
         except Exception as e:
             logger.info(f"Exception occured while creating LLM client : {e}")
 
 
-    async def getCVScore(self, task_queue,region,accessKey,accessSecret,sqsUrl):
+    async def getCVScore(self, task_queue,sqsUrl):
         try:
             resume = ''
             resumePath = ''
@@ -84,13 +88,28 @@ class ResumeRelevanceScorProcessor:
                         return None
                     
                     prompt = jobDescriptionPromptTemplate.format(job_description=job_Description)
-                    lammaJDSummary = LLMClient.GroqLLM(self.groqClient,prompt,self.GROQ_MODEL)
+                    lammaJDSummary = LLMClient.BedRockLLM(self.bd_client,prompt,self.bdModel)
 
                     if lammaJDSummary != "" and resume != "":
                         relevance_prompt_template = await Helper.read_prompt('app/static/ResumeRelevancePrompt.txt')
                         prompt = relevance_prompt_template.format(job_description=lammaJDSummary,resume=resume,date=todayDate)
-                        lammaRelevanceSummary = LLMClient.GroqLLM(self.groqClient,prompt,self.GROQ_MODEL)
+                        lammaRelevanceSummary = LLMClient.BedRockLLM(self.bd_client,prompt,self.bdModel)
                         logger.info(f"lammaRelevanceSummary: {lammaRelevanceSummary}")
+                    
+
+                    if lammaRelevanceSummary:
+                        relevanceSummary = Helper.output_formatter(lammaRelevanceSummary,message_data['metadata'])
+                        subject = "CV - screening"
+                        response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
+                        if response:
+                            print(f"response:{response}")
+                            await SQSMessage.delete_message(message,sqsUrl,self.region)
+                        
+                            
+                    else:
+                        error = f"unable to process the cv for {message_data['metadata']}"
+                        subject = "CV - screening"
+                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
 
                         
                     # openAIJDSummary=LLMClient.OpenAILLM(self.OPENAI_KEYClient,prompt,self.OPENAI_MODEL)
@@ -115,22 +134,22 @@ class ResumeRelevanceScorProcessor:
                     if lammaJDSummary != "" and resume != "":
                         relevance_prompt_template = await Helper.read_prompt('app/static/ResumeRelevancePrompt.txt')
                         prompt = relevance_prompt_template.format(job_description=lammaJDSummary,resume=resume,date=todayDate)
-                        lammaRelevanceSummary = LLMClient.GroqLLM(self.groqClient,prompt,self.GROQ_MODEL)
+                        lammaRelevanceSummary = LLMClient.BedRockLLM(self.bd_client,prompt,self.bdModel)
                         logger.info(f"lammaRelevanceSummary: {lammaRelevanceSummary}")
                     
                     if lammaRelevanceSummary:
                         relevanceSummary = Helper.output_formatter(lammaRelevanceSummary,message_data['metadata'])
                         subject = "CV - screening"
-                        response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,region,accessKey,accessSecret,self.SNS_ARN)
+                        response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
                         if response:
                             print(f"response:{response}")
-                            await SQSMessage.delete_message(message,sqsUrl,region,accessKey,accessSecret)
+                            await SQSMessage.delete_message(message,sqsUrl,self.region)
                         
                             
                     else:
                         error = f"unable to process the cv for {message_data['metadata']}"
                         subject = "CV - screening"
-                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,region,accessKey,accessSecret,self.SNS_ARN)
+                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.region,self.SNS_ARN)
                     
 
                     # openAIJDSummary=LLMClient.OpenAILLM(self.OPENAI_KEYClient,prompt,self.OPENAI_MODEL)

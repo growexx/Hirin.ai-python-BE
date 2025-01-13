@@ -21,11 +21,9 @@ class SQSMessage:
     
 
     @classmethod
-    async def delete_message(cls,message,queueUrl,AWS_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY):
+    async def delete_message(cls,message,queueUrl,AWS_REGION):
         try:
-            async with aioboto3.Session().client('sqs',region_name=AWS_REGION,
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY) as sqs:
+            async with aioboto3.Session().client('sqs',region_name=AWS_REGION) as sqs:
                 await sqs.delete_message(
                     QueueUrl=queueUrl,
                     ReceiptHandle=message['ReceiptHandle']
