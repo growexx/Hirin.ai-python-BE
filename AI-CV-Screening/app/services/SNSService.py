@@ -14,11 +14,9 @@ from datetime import datetime
 class SNSSender:
           
     @classmethod
-    async def send_message_to_sns_async(self,message,subject,AWS_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,topic_arn):
+    async def send_message_to_sns_async(self,message,subject,AWS_REGION,topic_arn):
         try:
-            async with aioboto3.Session().client('sns',region_name=AWS_REGION,
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY) as sns_client:
+            async with aioboto3.Session().client('sns',region_name=AWS_REGION) as sns_client:
                 publish_params = {
                     'TopicArn': topic_arn,
                     'Message': message,
