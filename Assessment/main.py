@@ -30,6 +30,20 @@ except Exception as e:
     logger.error(f"Failed to initialize SQS client: {e}")
     raise
 
+try:
+    brt = boto3.client(
+        "bedrock-runtime",
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    
+    # Set the model ID, e.g., Amazon Titan Text G1 - Express.
+    model_id = "meta.llama3-3-70b-instruct-v1:0"
+    logger.info("Successfully initialized bedrock client.")
+except Exception as e:
+    logger.error(f"Failed to initialize SQS client: {e}")
+    raise
+
 async def main():
     try:
         # Fetch messages from SQS
@@ -49,17 +63,20 @@ async def main():
                     print('assessments :: ',assessments)  # Parse the message as JSON
 
                     # Process the assessments using processor.py
-                    success = await process_data(assessments, sns_topic_arn, api_key, model)
+                    success = await process_data(assessments, sns_topic_arn, brt, model_id)
 
                     if success:
+                        logger.info(f"Successfully processed: {message['MessageId']}")
                         # Delete the message from SQS after processing
-                        sqs.delete_message(
-                            QueueUrl=queue_url,
-                            ReceiptHandle=message['ReceiptHandle']
-                        )
-                        logger.info(f"Successfully processed and deleted message ID: {message['MessageId']}")
                     else:
                         logger.warning(f"Failed to process message ID: {message['MessageId']}")
+
+                    sqs.delete_message(
+                        QueueUrl=queue_url,
+                        ReceiptHandle=message['ReceiptHandle']
+                    )
+                    logger.info(f"deleted message ID: {message['MessageId']}")
+                    
                 except json.JSONDecodeError as je:
                     logger.error(f"JSON decoding error for message ID {message['MessageId']}: {je}")
                 except Exception as e:
