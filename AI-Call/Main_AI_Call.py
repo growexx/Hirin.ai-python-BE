@@ -128,7 +128,7 @@ async def websocket_handler(client_ws):
         except asyncio.TimeoutError:
             return None 
         except Exception as e:
-            print(" Some error in websockert",e)
+            logger.error(" Some error in websockert {e}")
     async def client_reciever():
         nonlocal deepgram_ws,call_start_time,call_sid,stream_sid,accumilated_text,twilio_service_instance,buffer,marks
         empty_byte_received = False
