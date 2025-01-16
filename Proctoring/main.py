@@ -13,16 +13,12 @@ config.read('config.ini')
 
 # AWS Configuration
 AWS_REGION = config['aws']['region']
-AWS_ACCESS_KEY_ID = config['aws']['access_key_id']
-AWS_SECRET_ACCESS_KEY = config['aws']['secret_access_key']
 queue_url = config['sqs']['queue_url']
 sns_topic_arn = config['sns']['topic_arn']
 
 # Initialize SQS client
 sqs = boto3.client(
     'sqs',
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     region_name=AWS_REGION
 )
 
@@ -110,8 +106,14 @@ def fetch_and_process_from_sqs():
                                 "tab_switch_timestamps": tab_switch_timestamps,
                             })
                             aggregated_results.append(result)
+                        
+                        
+                        finalResult = {
+                            "metadata" : metadata,
+                            "proctoringData": aggregated_results
+                        }
 
-                    asyncio.run(send_message_to_sns_async(sns_topic_arn, aggregated_results, metadata))
+                    asyncio.run(send_message_to_sns_async(sns_topic_arn, finalResult, metadata))
                     
                     # Delete the SQS message after processing
                     sqs.delete_message(
