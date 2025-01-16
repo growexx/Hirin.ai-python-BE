@@ -3,36 +3,21 @@ environment_variables:
   plaintext:
     S3_BUCKET: "nodejsartifact"
     repository_url: "719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-proctoring-python-be-dev-repository" 
-    projectKey: "Hirin-Proctoring-BE-Dev"
-    projctVersion: "Staging"
-    projectName: "Hirin-Proctoring-BE-Dev"
-    
-env:
-  parameter-store:
-    SONAR_TOKEN: "SONAR_TOKEN"
-    SONAR_HOST: "SONAR_HOST"
-    
 phases:
   pre_build:
     commands:
       - echo `aws --version`
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 719056139938.dkr.ecr.us-east-2.amazonaws.com
-      - REPOSITORY_URI=719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-ai-cv-screening-dev-repository
+      - REPOSITORY_URI=719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-proctoring-python-be-dev-repository
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
       - echo Entered the pre_build phase...
-      - aws s3 cp s3://nodejsartifact/hirin-dev/config/ AI-CV-Screening/app/utils/ --recursive
-      - ls -ltr AI-CV-Screening/app/utils/
-      - cd AI-CV-Screening
-      - echo Runnng sonar-scanner on `date`
-      # - curl ifconfig.co
-      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.2.0.1227-linux.zip
-      - unzip sonar-scanner-cli-3.2.0.1227-linux.zip
-      - echo $SONAR_HOST
-      - ./sonar-scanner-3.2.0.1227-linux/bin/sonar-scanner -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.projectKey=$projectKey -Dsonar.projectVersion=$projectVersion
+      - aws s3 cp s3://nodejsartifact/hirin-proctoring-python-dev/config/config.ini Proctoring/
+      - ls 
   build:
     commands:
+      - cd  Proctoring
       - ls
       - docker build -f Dockerfile -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
