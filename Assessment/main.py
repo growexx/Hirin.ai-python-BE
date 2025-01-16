@@ -15,6 +15,7 @@ model = config['api']['model']
 queue_url = config['sqs']['queue_url']
 sns_topic_arn = config['sns']['topic_arn']
 
+
 # Initialize SQS client
 try:
     sqs = boto3.client(

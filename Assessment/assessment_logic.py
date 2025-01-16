@@ -188,7 +188,6 @@ def unified_assessment(metadata, role, job_description, questions_json, soft_ski
 
 def parse_assessment_result(data):
     try:
-        print(f"data:{data}")
         soft_skill_matches = re.findall(r"(\d+)\.\s(.+?)\nScore:\s(\d+)\nJustification:\s(.+?)\n", data)
         soft_skills_list = []
         soft_skills_data = {}
@@ -201,9 +200,11 @@ def parse_assessment_result(data):
             }
 
         # Extract strengths, areas of improvement, and recommendations
-        strengths = re.search(r"Strengths:\s*((?:- .+\n?)+)", data)
-        areas_of_improvement = re.search(r"Areas of Improvement:\s*((?:- .+\n?)+)", data)
-        recommendations = re.search(r"Recommendations:\s*((?:- .+\n?)+)", data)
+        strengths = re.search(r"strengths.*?\s*:\s*((?:-\s*.+\n?)+)", data,re.IGNORECASE)
+        print(strengths)
+        areas_of_improvement = re.search(r"areas\s*of\s*improvement.*?\s*:\s*((?:-\s*.+\n?)+)", data,re.IGNORECASE)
+        print(areas_of_improvement)
+        recommendations = re.search(r"Recommendations.*?\s*:\s*((?:- .+\n?)+)", data,re.IGNORECASE)
 
         # Process each section into lists of points
         strengths_list = [point.strip("- ").strip() for point in strengths.group(1).strip().split("\n") if point.strip()] if strengths else []
@@ -212,7 +213,7 @@ def parse_assessment_result(data):
 
         # Extract questions
         questions = re.findall(
-            r"Question\s*ID:\s(\w+)\nQuestion:\s(.+?)\nSkill:\s(.+?)\nSkill\s*Type:\s(.+?)\nTechnical\s*Score:\s(\d+)\nTechnical\s*Evaluation\s*Comment:\s(.+?)(?:\n|$)",
+            r"Question\s*ID:\s(\w+).*?\nQuestion:\s(.+?)\nSkill:\s(.+?)\nSkill\s*Type:\s(.+?)\nTechnical\s*Score:\s(\d+)\nTechnical\s*Evaluation\s*Comment:\s(.+?)(?:\n|$)",
             data,
             re.DOTALL | re.IGNORECASE # To handle multiline comments
         )
@@ -237,8 +238,8 @@ def parse_assessment_result(data):
         )
 
     except Exception as e:
-        logger.error(f"Failed to parse assessment result: {e}")
-        return None, None, None, None, None
+        print(f"Failed to parse assessment result: {e}")
+        return None, None, None, None, None, None, None, None, None
 
 
 def calculate_total_scores(questions):
