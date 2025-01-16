@@ -121,7 +121,7 @@ class FaceDetectionService:
                 "numberOfFacesDetected": len(total_faces_detected),
                 "multipleFacesDetected": len(total_faces_detected) > 1,
                 "noFaceDetected": len(total_faces_detected) == 0,
-                "timePersonWasNotInFrame": f"{total_time_not_in_frame:.0f} seconds",
+                "timePersonWasNotInFrame": int(total_time_not_in_frame),
                 "personNotInFrameDetails": {
                     "timeNotInFrame": [
                         {"start": f"{int(start // 60)}:{int(start % 60):02d}", "end": f"{int(end // 60)}:{int(end % 60):02d}"}
