@@ -17,6 +17,7 @@ from botocore.exceptions import ClientError
 import base64
 import ast
 from datetime import datetime
+from logger.logger_config import logger
 
 # Load configuration
 config = configparser.ConfigParser()
@@ -137,6 +138,7 @@ async def websocket_handler(client_ws):
             if data["event"] == "connected":
                 call_start_time = time.time()
                 deepgram_ws = await deepgram_service.connect()
+                logger.info("Deepgram Started")
                 print("Deepgram Started")
                 continue
             elif data["event"] == "start":
@@ -156,16 +158,18 @@ async def websocket_handler(client_ws):
             elif data["event"] == "mark":
                 label = data["mark"]["name"]
                 sequence_number = data["sequenceNumber"]
-                print(f"Audio of Sequence number :{sequence_number} and label :{label} has been played")
+                logger.info(f"Audio of Sequence number :{sequence_number} and label :{label} has been played")
                 marks = [m for m in marks if m != data["mark"]["name"]]
-                print("removed mark succesfully")
+                logger.info("removed mark succesfully")
                 if not marks and llm_speaking.is_set():
                     llm_speaking.clear()
                     accumilated_text =""
-                    print("LLM speaking is release and should be able to hear event")
+                    logger.info("LLm has finshed speaking and is ready to hear")
             elif data["event"] == "stop":
                 try :
                     print(call_logs)
+                    logger.info(call_logs)
+                    logger.info("Call logs appended as call stopped in between")
                     deepgram_ready.clear() 
                     llm_speaking.clear()
                     call_status = twilio_service_instance.client.calls(call_sid["value"]).fetch().status
@@ -185,8 +189,9 @@ async def websocket_handler(client_ws):
                         await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
                     call_start_time =None
                 except Exception as e:
-                    print("Error in SNS topic",e )
+                    logger.error(f"Error in SNS topic {e}")
                 continue
+
             if len(buffer) >= BUFFER_SIZE or empty_byte_received:
                 await outbox.put(buffer)
                 buffer = bytearray()
@@ -194,6 +199,7 @@ async def websocket_handler(client_ws):
     async def deepgram_sender():
         await deepgram_ready.wait()
         print("Deepgram websokcet started")
+        logger.info("Deepgram websokcet started")
         while True:
             chunk = await outbox.get()
             await deepgram_ws.send(chunk)
@@ -202,99 +208,109 @@ async def websocket_handler(client_ws):
     async def deepgram_reciever():
         nonlocal accumilated_text, twilio_service_instance, llm_speaking,call_sid,call_start_time
         print("Deepgram receiver started")
+        logger.info("Deepgram receiver started")
         await deepgram_ready.wait()
         print("Green flag from deepgram websocket")
+        logger.info("Green flag from deepgram websocket")
 
         interaction_time = time.time()
-        while True:
-            # Measure time for `check_for_transcript` function
-            message_json = await check_for_transcript(deepgram_ws)
+        try:
+            while True and deepgram_ready.is_set():
+                # Measure time for `check_for_transcript` function
 
-            if message_json:
-                print("Message detected")
-                if  not message_json.get("is_final"):
-                    print("Final message received")
-                    accumilated_text += " " + message_json["channel"]["alternatives"][0]["transcript"].strip()
-                interaction_time = time.time()
-                continue
-            else:
-                if llm_speaking.is_set():
+                message_json = await check_for_transcript(deepgram_ws)
+
+                if message_json:
+                    print("Message detected")
+                    logger.info("Message detected")
+                    if  not message_json.get("is_final"):
+                        print("Final message received")
+                        accumilated_text += " " + message_json["channel"]["alternatives"][0]["transcript"].strip()
                     interaction_time = time.time()
                     continue
+                else:
+                    if llm_speaking.is_set():
+                        interaction_time = time.time()
+                        continue
 
-                elapsed_time = time.time() - interaction_time
-                if llm_speaking.is_set():
-                    print(elapsed_time,"is time passed from check")
-                if elapsed_time > 1.6 and accumilated_text.strip() :
-                    print("Silence received")
-                    print("Candidate said:", accumilated_text ," at time ",elapsed_time)
+                    elapsed_time = time.time() - interaction_time
+                    if llm_speaking.is_set():
+                        print(elapsed_time,"is time passed from check")
+                        logger.info("{elapsed_time} is time passed from check")
+                    if elapsed_time > 1.6 and accumilated_text.strip() :
+                        logger.info(f"Candidate said:{accumilated_text}.  at time {elapsed_time}")
 
-                    # Measure time for LLM processing
-                    start_llm = time.time()
-                    llm_response = llm_processor.process(accumilated_text)
-                    end_llm = time.time()
-                    llm_time = end_llm - start_llm
-                    print(f"LLM processing time: {llm_time:.2f} seconds")
-                    print("LLM response:", llm_response)
+                        # Measure time for LLM processing
+                        start_llm = time.time()
+                        llm_response = llm_processor.process(accumilated_text)
+                        end_llm = time.time()
+                        llm_time = end_llm - start_llm
+                        print(f"LLM processing time: {llm_time:.2f} seconds")
+                        logger.info(f"LLM processing time: {llm_time:.2f} seconds")
+                        logger.info(f"LLM response: {llm_response}" )
 
-                    # Log the response
-                    call_logs.append({"type": "user", "message": accumilated_text})
-                    call_logs.append({"type": "system", "message": llm_response})
+                        # Log the response
+                        call_logs.append({"type": "user", "message": accumilated_text})
+                        call_logs.append({"type": "system", "message": llm_response})
 
-                    accumilated_text = ""
+                        accumilated_text = ""
 
-                    # Measure time for Text-to-Speech
-                    start_elevenlabs = time.time()
-                    await text_2_stream(llm_response)
-                    end_elevenlabs = time.time()
-                    elevenlabs_time = end_elevenlabs - start_elevenlabs
-                    print(f"Text-to-Speech time: {elevenlabs_time:.2f} seconds")
-                    await send_mark()
-                    llm_speaking.set()
+                        # Measure time for Text-to-Speech
+                        start_elevenlabs = time.time()
+                        await text_2_stream(llm_response)
+                        end_elevenlabs = time.time()
+                        elevenlabs_time = end_elevenlabs - start_elevenlabs
+                        print(f"Text-to-Speech time: {elevenlabs_time:.2f} seconds")
+                        logger.info(f"Text-to-Speech time: {elevenlabs_time:.2f} seconds")
+                        await send_mark()
+                        llm_speaking.set()
 
-                    if exit_message in llm_response:
-                        print(call_logs)
-                        deepgram_ready.clear() 
-                        asyncio.sleep(6)
-                        twilio_service_instance.client.calls(call_sid["value"]).fetch().update(status="completed")
-                        call_status = twilio_service_instance.client.calls(call_sid["value"]).fetch().status
-                        call_instance_output = next((d for d in shared_data["call_instance_list"] if d["call_sid"]==call_sid["value"]),None)
-                        shared_data["call_instance_list"] = [
-                            item for item in shared_data["call_instance_list"] if item != call_instance_output
-                            ]
+                        if exit_message in llm_response:
+                            logger.info(f"Call logs Collected after completing questions are :{call_logs}")
+                            deepgram_ready.clear() 
+                            asyncio.sleep(6)
+                            twilio_service_instance.client.calls(call_sid["value"]).fetch().update(status="completed")
+                            call_status = twilio_service_instance.client.calls(call_sid["value"]).fetch().status
+                            call_instance_output = next((d for d in shared_data["call_instance_list"] if d["call_sid"]==call_sid["value"]),None)
+                            shared_data["call_instance_list"] = [
+                                item for item in shared_data["call_instance_list"] if item != call_instance_output
+                                ]
 
-                        if call_instance_output is not None:
-                            call_instance_output["call_status"]= call_status_mapping.get(call_status)
-                            call_instance_output["transcript"]=call_logs
-                            call_instance_output["callS_start_time"]=datetime.fromtimestamp(call_start_time).isoformat()
-                            call_instance_output["call_end_time"]=datetime.fromtimestamp(time.time()).isoformat()
-                            call_instance_output["event"]="aiCallEnded"
-                            call_instance_output.pop(call_sid["value"],None)
-                            call_instance_output.pop("wait_n_mins",None)
-                            print(call_instance_output)
-                            await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
-                        call_start_time =None
+                            if call_instance_output is not None:
+                                call_instance_output["call_status"]= call_status_mapping.get(call_status)
+                                call_instance_output["transcript"]=call_logs
+                                call_instance_output["callS_start_time"]=datetime.fromtimestamp(call_start_time).isoformat()
+                                call_instance_output["call_end_time"]=datetime.fromtimestamp(time.time()).isoformat()
+                                call_instance_output["event"]="aiCallEnded"
+                                call_instance_output.pop(call_sid["value"],None)
+                                call_instance_output.pop("wait_n_mins",None)
+                                print(call_instance_output)
 
-                        llm_speaking.clear()
-                        
-                        print("Call is ended")
-                        # Measure time for Twilio call update
-                        start_twilio = time.time()
-                        twilio_service_instance.client.calls(call_sid["value"]).fetch().update(status="completed")
-                        end_twilio = time.time()
-                        twilio_time = end_twilio - start_twilio
-                        print(f"Twilio update time: {twilio_time:.2f} seconds")
-                        print(twilio_service_instance.client.calls(call_sid["value"]).fetch().status)
+                                await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
+                            call_start_time =None
+
+                            llm_speaking.clear()
+                            
+
+                            logger.warning("call has ended")
+                            # Measure time for Twilio call update
+                            start_twilio = time.time()
+                            twilio_service_instance.client.calls(call_sid["value"]).fetch().update(status="completed")
+                            end_twilio = time.time()
+                            twilio_time = end_twilio - start_twilio
+                            print(f"Twilio update time: {twilio_time:.2f} seconds")
+                            print(twilio_service_instance.client.calls(call_sid["value"]).fetch().status)
 
 
 
-                
-                elif elapsed_time > 5 and not accumilated_text and not llm_speaking.is_set():
-                    silence_message = "You are not audible, could you repeat please?"
-                    await text_2_stream(silence_message)
-                    await send_mark()
-                    interaction_time = time.time()
-
+                    
+                    elif elapsed_time > 5 and not accumilated_text and not llm_speaking.is_set():
+                        silence_message = "You are not audible, could you repeat please?"
+                        await text_2_stream(silence_message)
+                        await send_mark()
+                        interaction_time = time.time()
+        except Exception as e:
+            logger.error(f"error {e} found in Deepgram receievr")
 
     await asyncio.gather(deepgram_sender(), deepgram_reciever(),client_reciever())
 
@@ -359,7 +375,6 @@ async def recall_and_status():
                     instance["wait_n_mins"] -= 1
 
         await asyncio.sleep(60)
-
 
 
 async def main():
