@@ -2,22 +2,22 @@ version: 0.2
 environment_variables:
   plaintext:
     S3_BUCKET: "nodejsartifact"
-    repository_url: "719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-proctoring-python-be-dev-repository" 
+    repository_url: "719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-assessment-python-be-dev-repository" 
 phases:
   pre_build:
     commands:
       - echo `aws --version`
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 719056139938.dkr.ecr.us-east-2.amazonaws.com
-      - REPOSITORY_URI=719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-proctoring-python-be-dev-repository
+      - REPOSITORY_URI=719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin-assessment-python-be-dev-repository
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
       - echo Entered the pre_build phase...
-      - aws s3 cp s3://nodejsartifact/hirin-proctoring-python-dev/config/config.ini Proctoring/
-      - ls 
+      - aws s3 cp s3://nodejsartifact/hirin-assessment-python-be-dev/config/config.ini Assessment/
+      - ls -lart
   build:
     commands:
-      - cd  Proctoring
+      - cd  Assessment
       - ls
       - docker build -f Dockerfile -t $REPOSITORY_URI:latest .
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
@@ -27,15 +27,3 @@ phases:
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
-   #   - cd ..
-   #   - echo Writing image definitions file...  
-   #   - printf '[{"name":"hirin-proctoring-python-be-dev-container","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
-                           
-cache:
-  paths:
-    - '/var/lib/docker/**/*'
-    - '/root/.cache/docker/**/*'
-    - '/root/.cache/pip/**/*'
-    
-#artifacts:
-# files: imagedefinitions.json

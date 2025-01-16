@@ -3,29 +3,33 @@ Task: Based on the provided job description and additional input data, generate 
 Job Description: {SJD}
 
 Input Data:
-- Key Skills: {keySkills}
-- Proficiency Levels: {proficiencyLevel} (Beginner, Intermediate, Expert)
-- Questions Per Skill: {questionsPerSkill} (Number of questions to generate for each skill)
-- Interview Duration: {interview_duration} minutes
+keySkills: {keySkills}
+proficiencyLevel: {proficiencyLevel}
+questionsPerSkill: {questionsPerSkill}
+interviewDuration: {interview_duration} minutes
 
 Instructions:
 
-1. Review the Job Description and Input Data:
-    - Extract and focus on the key skills, their complexity (proficiency level), and allocate the exact number of questions for each skill as specified in the input.
+1. **Generate Questions for Each Skill**:
+    - For each skill in `keySkills`, generate the exact number of questions specified in `questionsPerSkill`.
+    - Do not repeat the questions.
+    - Match the complexity of each question to the specified proficiency level for the skill:
+        - Beginner: Foundational or conceptual questions.
+        - Intermediate: Applied or scenario-based questions.
+        - Expert: Deeply technical or strategic questions.
 
-2. Question Generation:
-    - **Complexity**: Match the complexity of each question to the proficiency level for the skill (Beginner, Intermediate, Expert).
-    - **Deterministic**: Ensure questions have clear, objective answers for easier evaluation.
-    - **Skill-Based Distribution**: Allocate the precise number of questions for each skill as given in the input data.
+2. **Validation Logic**:
+    - **Step 1**: Count the total number of generated questions.
+    - **Step 2**: Compare the total count of questions to the sum of `questionsPerSkill`. Total questions = {sumquestionsPerSkill}.
+        - If the total count does not match, adjust by adding or removing questions to strictly align with the input.
+    - **Step 3**: For each skill, confirm the number of generated questions matches the corresponding value in `questionsPerSkill`. If it does not match:
+        - Add or remove questions for that skill as needed.
+        - Ensure all adjusted questions are relevant and match the specified proficiency level.
 
-3. Role Details:
-    - Role Title: [Extract from Job Description]
-    - Seniority Level: [Extract from Job Description]
-
-4. Output Format:
+3. **Output Format**:
     Question Number [n]: [Write the question]
-    Estimated Time: [X minutes] (Use 2-5 minutes per question as a guideline.)
-    Level of Difficulty: [Beginner/Intermediate/Expert]
+    Estimated Time: [X minutes] (Use 1-5 minutes per question as a guideline.)
+    Level of Difficulty: [Should be as per proficiencyLevel for that skill] (Beginner / Intermediate / Expert)
     Key Skill: [Skill being assessed]
     Question Type: [Expertise-focused/Analytical Thinking]
 
@@ -33,27 +37,12 @@ Instructions:
 - Avoid coding, scripting, or SQL query questions during the interview.
 - Avoid requiring specific syntax or code examples as part of the answer.
 
-5. Guidelines:
-    - **Time Management**: Ensure the total number of questions fits within the {interview_duration}-minute timeframe.
-    - **Question Quality**: Focus on conceptual, practical, and theoretical questions to assess technical knowledge, analytical thinking, or practical understanding.
-    - **Output Consistency**: Follow the exact output format provided. Double-check tags, estimated time, difficulty level, and skill categories for accuracy.
-
-6. Example Output:
-    Key Skill: Apache Kafka and Spark (Expert, 3 questions required)
-    Question Number 1: Can you explain how Kafka ensures message durability and fault tolerance in distributed systems?
-    Estimated Time: 4 minutes
-    Level of Difficulty: Expert
-    Key Skill: Apache Kafka and Spark
-    Question Type: Expertise-focused
-
-    Key Skill: Snowflake (Beginner, 1 question required)
-    Question Number 4: Describe the primary use cases for Snowflake in data warehousing.
-    Estimated Time: 3 minutes
-    Level of Difficulty: Beginner
-    Key Skill: Snowflake
-    Question Type: Analytical Thinking
+4. **Final Validation Before Completion**:
+    - **Strictly ensure**:
+        - The total number of questions equals {sumquestionsPerSkill}.
+        - The distribution of questions across skills matches `questionsPerSkill`.
+    - Only finalize the output if all validation checks pass.
 
 **Additional Instructions**:
-- DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES.
-- DO NOT USE OUTSIDE KNOWLEDGE OR ASSUMPTIONS BEYOND THE JOB DESCRIPTION.
-- EXAMPLE OUTPUT FORMAT MUST BE FOLLOWED.
+- DO NOT INCLUDE ANY ADDITIONAL COMMENTARY OR NOTES IN RESPONSE.
+- STRICTLY FOLLOW THE OUTPUT FORMAT PROVIDED.

@@ -9,8 +9,6 @@ config.read('config.ini')
 
 deepgram_api_key = config.get('deepgram', 'deepgram_api_key')
 deepgram_url = config.get('deepgram', 'deep_gram_url')
-# deepgram_model_id = config.get('deepgram', 'deepgram_stt_model_id')
-
 
 async def sns_publisher(sns_client,sns_topic_arn,message):
     message_payload = {

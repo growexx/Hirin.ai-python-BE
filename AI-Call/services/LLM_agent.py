@@ -6,13 +6,13 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-model_id = config.get('llm', 'model_id')
+
 
 class LanguageModelProcessor:
     def __init__(self):
         # Initialize Bedrock LLM
         self.llm = boto3.client(
-            "bedrock-runtime",
+            "bedrock-runtime"
         )
         self.model_id = "meta.llama3-3-70b-instruct-v1:0"
 

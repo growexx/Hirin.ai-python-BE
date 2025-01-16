@@ -1,10 +1,10 @@
 import os
 import requests
 from urllib.parse import urlparse, unquote
-from app.logger_config import logger
+from app.utils.logger_config import logger
 import aiohttp
 
-class AWSService:
+class BucketReadService:
 
     @classmethod
     async def download_file_from_s3(cls,url,save_dir):

@@ -1,4 +1,4 @@
-FROM 719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin:python3.12-alpine
+FROM 719056139938.dkr.ecr.us-east-2.amazonaws.com/hirin:python3.10.12-alpine
 
 WORKDIR /app
 
@@ -11,6 +11,4 @@ RUN adduser -D appuser && chown -R appuser:appuser /app
 
 USER appuser
 
-EXPOSE 5000
-
-CMD ["python3", "run.py"]
+CMD ["python3", "main.py"]

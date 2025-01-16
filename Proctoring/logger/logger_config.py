@@ -8,11 +8,9 @@ import os
 log_dir = os.path.join(os.getcwd(), 'logs')
 log_file = os.path.join(log_dir, 'app.log.jsonl')
 
-# Ensure log directory exists
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
-# Logging configuration dictionary
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -52,10 +50,8 @@ LOGGING_CONFIG = {
     }
 }
 
-# Initialize logging queue
 log_queue = Queue()
 
-# Configure handlers
 file_handler = logging.handlers.RotatingFileHandler(
     filename="logs/app.log.jsonl",
     maxBytes=1048576,
@@ -65,16 +61,8 @@ file_handler.setFormatter(logging.Formatter('{"level": "%(levelname)s", "message
 
 stderr_handler = logging.StreamHandler()
 stderr_handler.setFormatter(logging.Formatter("[%(levelname)s|%(module)s] %(message)s"))
-
-# Listener for background thread
 listener = logging.handlers.QueueListener(log_queue, file_handler, stderr_handler)
-
-# Apply queue configuration
 LOGGING_CONFIG["handlers"]["queue"]["queue"] = log_queue
 logging.config.dictConfig(LOGGING_CONFIG)
-
-# Start listener thread
 listener.start()
-
-# Get logger
 logger = logging.getLogger("app_logger")

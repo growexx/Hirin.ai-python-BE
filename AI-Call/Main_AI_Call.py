@@ -32,11 +32,7 @@ websocket_url = config.get('twilio', 'WEBSOCKET_URL')
 llm_api_key = config.get('llm', 'api_key')
 llm_model = config.get('llm', 'model_id')
 
-
 # AWS Access
-aws_access_key_id = config.get('aws', 'aws_access_key_id')
-aws_secret_access_key = config.get('aws', 'aws_secret_access_key')
-aws_region = config.get('aws', 'aws_region')
 sns_topic_arn = config.get('aws', 'aws_sns_topic_arn')
 queue_url = config.get('aws', 'queue_url')
 
@@ -95,10 +91,7 @@ async def websocket_handler(client_ws):
     marks =[]
     
     sns_client = boto3.client(
-        'sns',
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region
+        'sns'
     )
     
     async def text_2_stream(text):
@@ -188,6 +181,7 @@ async def websocket_handler(client_ws):
                         call_instance_output["call_end_time"]=datetime.fromtimestamp(time.time()).isoformat()
                         call_instance_output["event"]="aiCallEnded"
                         call_instance_output.pop(call_sid["value"],None)
+                        call_instance_output.pop("wait_n_mins",None)
                         await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
                     call_start_time =None
                 except Exception as e:
@@ -276,6 +270,7 @@ async def websocket_handler(client_ws):
                             call_instance_output["call_end_time"]=datetime.fromtimestamp(time.time()).isoformat()
                             call_instance_output["event"]="aiCallEnded"
                             call_instance_output.pop(call_sid["value"],None)
+                            call_instance_output.pop("wait_n_mins",None)
                             print(call_instance_output)
                             await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
                         call_start_time =None
@@ -308,7 +303,7 @@ async def poll_queue():
     twilio_service = TwilioService()
     print("poll queue is started")
     session = AioSession()
-    async with session.create_client('sqs', region_name=aws_region,aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key) as client:
+    async with session.create_client('sqs') as client:
         while True:
             response = await client.receive_message(
                 QueueUrl=queue_url,
