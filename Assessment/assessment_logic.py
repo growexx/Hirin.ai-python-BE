@@ -7,31 +7,31 @@ import json
 def extract_assessment_data(assessments):
     try:
 
-        print(f"type: {type(assessments)}")
+        logger.info(f"type: {type(assessments)}")
         message = assessments.get('Message',None)
-        print(f"message: {message}")
+        logger.info(f"message: {message}")
         if not message:
             return None, None, None, None, None
 
         parsed_message = json.loads(message)
         
         metadata = parsed_message['metadata']
-        print("Metadata:", metadata)
+        logger.info("Metadata:", metadata)
 
         role = parsed_message["role"]
-        print("Role:", role)
+        logger.info("Role:", role)
 
         job_description = parsed_message["job_description"]
-        print("Job Description:", job_description)
+        logger.info("Job Description:", job_description)
 
         level_of_seniority = parsed_message["level_of_seniority"]
-        print("Level of Seniority:", level_of_seniority)
+        logger.info("Level of Seniority:", level_of_seniority)
 
         questions = parsed_message["questions"]
-        print("Questions:", questions)
+        logger.info("Questions:", questions)
 
         questions_json = {"questions": questions}
-        print("Questions JSON:", questions_json)
+        logger.info("Questions JSON:", questions_json)
 
         # Check if any essential data is None
         if any(x is None for x in [metadata, role, job_description, level_of_seniority, questions_json]):
@@ -179,7 +179,7 @@ def unified_assessment(metadata, role, job_description, questions_json, soft_ski
             messages=conversation
         )
 
-        # Extract and print the response text.
+        # Extract and logger.info the response text.
         response_text = response["output"]["message"]["content"][0]["text"]
         return response_text
         logger.info("Unified assessment completed successfully.")
@@ -269,7 +269,7 @@ def calculate_soft_skill_scores(soft_skill_scores):
         logger.info(f"Total soft skill scores calculated: {total_soft_skill_score, total_possible_soft_skill_score}")
         return total_soft_skill_score, total_possible_soft_skill_score
     except Exception as e:
-        print(f"Error in calculate_soft_skill_scores: {e}")
+        logger.info(f"Error in calculate_soft_skill_scores: {e}")
         return None
 
 def skill_wise_assessment(questions, skill_scores, brt, model_id):
@@ -350,7 +350,7 @@ def extract_technical_summary(technical_result):
         return technical_skill_strengths, areas_of_improvement_list, recommendations_list
 
     except Exception as e:
-        print(f"Error extracting technical summary: {e}")
+        logger.info(f"Error extracting technical summary: {e}")
         return [], [], []
 
 
@@ -398,7 +398,7 @@ def end_assessment(technical_result, soft_skills_data, candidate_score, brt, mod
             messages=[{"role": "user", "content": [{"text": prompt_for_recruiter_assessment}]}]
         )
     
-        # Extract and print the response text
+        # Extract and logger.info the response text
         response_text = response["output"]["message"]["content"][0]["text"]
         return response_text
     except Exception as e:

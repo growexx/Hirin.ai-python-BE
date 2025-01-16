@@ -46,17 +46,17 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
         # Calculate total soft skill score
         total_soft_skill_score, possible_soft_skill_score = calculate_soft_skill_scores(soft_skill_scores)
 
-        # Print results
-        print("Soft Skills List:", soft_skills)
-        print("Soft Skill Scores:", soft_skill_scores)
-        print("Soft Skills Justifications:", soft_skill_justifications)
-        print("Soft Skills Data:", soft_skills_data)
-        print("Strengths:", soft_skills_strengths)
-        print("Areas of Improvement:", soft_skills_areas_of_improvement)
-        print("Recommendations:", soft_skills_recommendations)
-        print("\nTechnical Questions:", questions)
-        print(f"\nCandidate Technical Score: {total_technical_score}/{possible_technical_score}")
-        print(f"Total Soft Skill Score: {total_soft_skill_score}/{possible_soft_skill_score}")        
+        # logger.info results
+        logger.info("Soft Skills List:", soft_skills)
+        logger.info("Soft Skill Scores:", soft_skill_scores)
+        logger.info("Soft Skills Justifications:", soft_skill_justifications)
+        logger.info("Soft Skills Data:", soft_skills_data)
+        logger.info("Strengths:", soft_skills_strengths)
+        logger.info("Areas of Improvement:", soft_skills_areas_of_improvement)
+        logger.info("Recommendations:", soft_skills_recommendations)
+        logger.info("\nTechnical Questions:", questions)
+        logger.info(f"\nCandidate Technical Score: {total_technical_score}/{possible_technical_score}")
+        logger.info(f"Total Soft Skill Score: {total_soft_skill_score}/{possible_soft_skill_score}")        
         
         if any(x is None for x in [soft_skills, soft_skill_scores, soft_skill_justifications, soft_skills_data, soft_skills_strengths, soft_skills_areas_of_improvement, soft_skills_recommendations, questions, technical_scores]):
             logger.error("Failed to parse assessment result.")
@@ -70,18 +70,18 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
             logger.error("Failed to complete skill-wise assessment.")
             return False
 
-        print("technical_result:: ",technical_result)
+        logger.info("technical_result:: ",technical_result)
         
         technical_skill_strengths, technical_skill_areas_of_improvement, technical_skill_recommendations = extract_technical_summary(technical_result)
 
-        print("Technical Skill Strengths:", technical_skill_strengths)
-        print("Areas of Improvement:", technical_skill_areas_of_improvement)
-        print("Recommendations:", technical_skill_recommendations)
+        logger.info("Technical Skill Strengths:", technical_skill_strengths)
+        logger.info("Areas of Improvement:", technical_skill_areas_of_improvement)
+        logger.info("Recommendations:", technical_skill_recommendations)
 
         # Step 7: Generate overall assessment
         overall_assessment_result = end_assessment(technical_result, soft_skills_data, total_technical_score, brt, model_id)        
         
-        # print("overall_assessment_result:: ",overall_assessment_result)
+        # logger.info("overall_assessment_result:: ",overall_assessment_result)
         # Check if overall assessment result is None
         if overall_assessment_result is None:
             logger.error("Failed to generate overall assessment.")
@@ -138,9 +138,9 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
             }
         }
 
-        print("json output :: ", output)
+        logger.info("json output :: ", output)
         sns_message = json.dumps(output, indent=2)
-        print("sns_message::", sns_message)
+        logger.info("sns_message::", sns_message)
         logger.info("Final assessment output prepared for SNS.")
 
         # Send the message to SNS
