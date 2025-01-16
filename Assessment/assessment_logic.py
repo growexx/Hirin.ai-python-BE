@@ -15,22 +15,22 @@ def extract_assessment_data(assessments):
         parsed_message = json.loads(message)
         
         metadata = parsed_message['metadata']
-        logger.info("Metadata:", metadata)
+        logger.info(f"Metadata: {metadata}")
 
         role = parsed_message["role"]
-        logger.info("Role:", role)
+        logger.info(f"Role: {role}")
 
         job_description = parsed_message["job_description"]
-        logger.info("Job Description:", job_description)
+        logger.info(f"Job Description: {job_description}")
 
         level_of_seniority = parsed_message["level_of_seniority"]
-        logger.info("Level of Seniority:", level_of_seniority)
+        logger.info(f"Level of Seniority: {level_of_seniority}")
 
         questions = parsed_message["questions"]
-        logger.info("Questions:", questions)
+        logger.info(f"Questions: {questions}")
 
         questions_json = {"questions": questions}
-        logger.info("Questions JSON:", questions_json)
+        logger.info(f"Questions JSON: {questions_json}")
 
         # Check if any essential data is None
         if any(x is None for x in [metadata, role, job_description, level_of_seniority, questions_json]):

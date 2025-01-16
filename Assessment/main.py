@@ -54,7 +54,7 @@ async def main():
                 try:
                     logger.info(f"Processing message ID: {message['MessageId']}")
                     assessments = json.loads(message['Body'])
-                    logger.info('assessments :: ',assessments)  # Parse the message as JSON
+                    logger.info(f"assessments :: {assessments}")  # Parse the message as JSON
 
                     # Process the assessments using processor.py
                     success = await process_data(assessments, sns_topic_arn, brt, model_id)
@@ -85,4 +85,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        logger.critical(f"Unhandled exception in main: {e}")
+        logger.error(f"Unhandled exception in main: {e}")

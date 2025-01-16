@@ -25,7 +25,7 @@ async def send_message_to_sns_async(topic_arn, data, role):
             response = await sns_client.publish(**publish_params)
             logger.info(f"Message sent successfully to SNS. Topic ARN: {topic_arn}, Role: {role}")
             logger.debug(f"SNS Response: {response}")
-            logger.info("Message sent successfully. Response:", response)
+            logger.info(f"Message sent successfully. Response: {response}")
 
     except Exception as e:
         logger.error(f"Failed to send message to SNS. Topic ARN: {topic_arn}, Role: {role}, Error: {e}")
