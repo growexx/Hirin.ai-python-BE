@@ -1,6 +1,5 @@
 import re
 from collections import defaultdict
-from groq import Groq
 from logger.logger_config import logger
 import json
 
