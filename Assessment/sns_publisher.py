@@ -9,6 +9,7 @@ config.read('config.ini')
 
 AWS_REGION = config['aws']['region']
 
+
 async def send_message_to_sns_async(topic_arn, data, role):
     try:
         async with aioboto3.Session().client(
