@@ -211,9 +211,9 @@ def parse_assessment_result(data):
 
         # Extract questions
         questions = re.findall(
-            r"Question ID:\s(\w+)\nQuestion:\s(.+?)\nSkill:\s(.+?)\nSkill Type:\s(.+?)\nTechnical Score:\s(\d+)\nTechnical Evaluation Comment:\s(.+?)(?:\n|$)",
+            r"Question\s*ID:\s(\w+)\nQuestion:\s(.+?)\nSkill:\s(.+?)\nSkill\s*Type:\s(.+?)\nTechnical\s*Score:\s(\d+)\nTechnical\s*Evaluation\s*Comment:\s(.+?)(?:\n|$)",
             data,
-            re.DOTALL  # To handle multiline comments
+            re.DOTALL | re.IGNORECASE # To handle multiline comments
         )
 
         # Calculate technical skill-wise scores
