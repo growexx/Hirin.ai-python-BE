@@ -47,14 +47,14 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
         total_soft_skill_score, possible_soft_skill_score = calculate_soft_skill_scores(soft_skill_scores)
 
         # logger.info results
-        logger.info("Soft Skills List:", soft_skills)
-        logger.info("Soft Skill Scores:", soft_skill_scores)
-        logger.info("Soft Skills Justifications:", soft_skill_justifications)
-        logger.info("Soft Skills Data:", soft_skills_data)
-        logger.info("Strengths:", soft_skills_strengths)
-        logger.info("Areas of Improvement:", soft_skills_areas_of_improvement)
-        logger.info("Recommendations:", soft_skills_recommendations)
-        logger.info("\nTechnical Questions:", questions)
+        logger.info(f"Soft Skills List: {soft_skills}")
+        logger.info(f"Soft Skill Scores: {soft_skill_scores}")
+        logger.info(f"Soft Skills Justifications: {soft_skill_justifications}")
+        logger.info(f"Soft Skills Data: {soft_skills_data}")
+        logger.info(f"Strengths: {soft_skills_strengths}")
+        logger.info(f"Areas of Improvement: {soft_skills_areas_of_improvement}")
+        logger.info(f"Recommendations: {soft_skills_recommendations}")
+        logger.info(f"\nTechnical Questions:", questions)
         logger.info(f"\nCandidate Technical Score: {total_technical_score}/{possible_technical_score}")
         logger.info(f"Total Soft Skill Score: {total_soft_skill_score}/{possible_soft_skill_score}")        
         
@@ -70,13 +70,13 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
             logger.error("Failed to complete skill-wise assessment.")
             return False
 
-        logger.info("technical_result:: ",technical_result)
+        logger.info(f"technical_result:: {technical_result}")
         
         technical_skill_strengths, technical_skill_areas_of_improvement, technical_skill_recommendations = extract_technical_summary(technical_result)
 
-        logger.info("Technical Skill Strengths:", technical_skill_strengths)
-        logger.info("Areas of Improvement:", technical_skill_areas_of_improvement)
-        logger.info("Recommendations:", technical_skill_recommendations)
+        logger.info(f"Technical Skill Strengths: {technical_skill_strengths}")
+        logger.info(f"Areas of Improvement: {technical_skill_areas_of_improvement}")
+        logger.info(f"Recommendations: {technical_skill_recommendations}")
 
         # Step 7: Generate overall assessment
         overall_assessment_result = end_assessment(technical_result, soft_skills_data, total_technical_score, brt, model_id)        
@@ -138,9 +138,9 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
             }
         }
 
-        logger.info("json output :: ", output)
+        logger.info(f"json output ::  output")
         sns_message = json.dumps(output, indent=2)
-        logger.info("sns_message::", sns_message)
+        logger.info(f"sns_message:: sns_message")
         logger.info("Final assessment output prepared for SNS.")
 
         # Send the message to SNS
