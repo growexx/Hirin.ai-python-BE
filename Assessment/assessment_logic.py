@@ -188,6 +188,7 @@ def unified_assessment(metadata, role, job_description, questions_json, soft_ski
 
 def parse_assessment_result(data):
     try:
+        print(f"data:{data}")
         soft_skill_matches = re.findall(r"(\d+)\.\s(.+?)\nScore:\s(\d+)\nJustification:\s(.+?)\n", data)
         soft_skills_list = []
         soft_skills_data = {}
