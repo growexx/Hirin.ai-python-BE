@@ -108,10 +108,10 @@ def fetch_and_process_from_sqs():
                             aggregated_results.append(result)
                         
                         
-                        finalResult = {
-                            "metadata" : metadata,
-                            "proctoringData": aggregated_results
-                        }
+                    finalResult = {
+                        "metadata": metadata,
+                        "proctoringData": aggregated_results
+                    }
 
                     asyncio.run(send_message_to_sns_async(sns_topic_arn, finalResult, metadata))
                     
