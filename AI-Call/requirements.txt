@@ -1,6 +1,7 @@
 twilio
 pydub
 elevenlabs
+langchain_aws
 boto3
 aiobotocore
 aiohttp==3.9.3
@@ -36,7 +37,7 @@ jsonpatch==1.33
 jsonpointer==2.4
 jupyter_client==8.6.0
 jupyter_core==5.7.1
-langchain==0.1.9
+langchain
 langchain-community==0.0.24
 langchain-core==0.1.26
 langchain-groq==0.0.1
@@ -91,3 +92,4 @@ websockets==12.0
 yarl==1.9.4
 zope.event==5.0
 zope.interface==6.2
+
