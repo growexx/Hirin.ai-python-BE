@@ -30,15 +30,8 @@ websocket_url = config.get('twilio', 'WEBSOCKET_URL')
 
 # LLM Agent
 llm_api_key = config.get('llm', 'api_key')
-llm_model = config.get('llm', 'model_name')
+llm_model = config.get('llm', 'model_id')
 
-# ElevenLabs
-tts_voice_id = config.get('tts', 'voice_id')
-elevenlabs_api_key = config.get('tts', 'api_key')
-
-# Deepgram Access
-deepgram_api_key = config.get('deepgram', 'deepgram_api_key')
-deep_gram_url = config.get('deepgram', 'deep_gram_url')
 
 # AWS Access
 aws_access_key_id = config.get('aws', 'aws_access_key_id')
@@ -54,11 +47,15 @@ shared_data = {
 }
 
 call_status_mapping = {
+
     "canceled": 0,
     "completed": 1,
     "busy": 2,
     "no-answer": 3,
     "failed": 4,
+    "queued":5,
+    "ringing":6,
+    "in-progress":7
 }
 
 async def sns_publisher(sns_client,message_payload):
@@ -73,7 +70,6 @@ def validate_phone_no(phone_no:str):
     pattern = r"^\+91\d{10}$"
     return bool(re.match(pattern, phone_no))
 
-
 async def websocket_handler(client_ws):
     twilio_service_instance = TwilioService()
     call_start_time = None
@@ -84,17 +80,17 @@ async def websocket_handler(client_ws):
     call_logs = []
 
     outbox = asyncio.Queue()
-    deepgram_service = DeepgramService(api_key=deepgram_api_key,deepgram_url=deep_gram_url)
+    deepgram_service = DeepgramService()
     deepgram_ws = None 
     deepgram_ready = asyncio.Event()
     
     accumilated_text=""
     
     llm_speaking = asyncio.Event()
-    llm_processor = LanguageModelProcessor(llm_api_key=llm_api_key, llm_model=llm_model, system_prompt="")
-    exit_message ="Thank you for completing the screening process. Your responses have been recorded, and we will get back to you soon regarding the next steps."
+    llm_processor = LanguageModelProcessor()
+    exit_message ="goodbye."
     
-    elevenlabs_service = ElevenLabsService(api_key=elevenlabs_api_key, voice_id=tts_voice_id, model_id="eleven_flash_v2")
+    elevenlabs_service = ElevenLabsService()
 
     marks =[]
     
@@ -105,7 +101,6 @@ async def websocket_handler(client_ws):
         region_name=aws_region
     )
     
-
     async def text_2_stream(text):
         async for chunk in elevenlabs_service.text_to_speech(text):
             payload = {
@@ -189,10 +184,11 @@ async def websocket_handler(client_ws):
                     if call_instance_output is not None:
                         call_instance_output["call_status"]= call_status_mapping.get(call_status)
                         call_instance_output["transcript"]=call_logs
-                        call_instance_output["callStartTime"]=datetime.fromtimestamp(call_start_time).isoformat()
-                        call_instance_output["callStartTime"]=datetime.fromtimestamp(time.time()).isoformat()
+                        call_instance_output["callS_start_time"]=datetime.fromtimestamp(call_start_time).isoformat()
+                        call_instance_output["call_end_time"]=datetime.fromtimestamp(time.time()).isoformat()
+                        call_instance_output["event"]="aiCallEnded"
                         call_instance_output.pop(call_sid["value"],None)
-                    await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
+                        await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
                     call_start_time =None
                 except Exception as e:
                     print("Error in SNS topic",e )
@@ -209,9 +205,8 @@ async def websocket_handler(client_ws):
             await deepgram_ws.send(chunk)
         print("Deepgram websocket closed")
 
-
     async def deepgram_reciever():
-        nonlocal accumilated_text, twilio_service_instance, llm_speaking
+        nonlocal accumilated_text, twilio_service_instance, llm_speaking,call_sid,call_start_time
         print("Deepgram receiver started")
         await deepgram_ready.wait()
         print("Green flag from deepgram websocket")
@@ -221,13 +216,12 @@ async def websocket_handler(client_ws):
             # Measure time for `check_for_transcript` function
             message_json = await check_for_transcript(deepgram_ws)
 
-
             if message_json:
                 print("Message detected")
-                if message_json.get("is_final"):
+                if  not message_json.get("is_final"):
                     print("Final message received")
                     accumilated_text += " " + message_json["channel"]["alternatives"][0]["transcript"].strip()
-                    interaction_time = time.time()
+                interaction_time = time.time()
                 continue
             else:
                 if llm_speaking.is_set():
@@ -237,9 +231,9 @@ async def websocket_handler(client_ws):
                 elapsed_time = time.time() - interaction_time
                 if llm_speaking.is_set():
                     print(elapsed_time,"is time passed from check")
-                if elapsed_time > 1.8 and accumilated_text.strip() :
+                if elapsed_time > 1.6 and accumilated_text.strip() :
                     print("Silence received")
-                    print("Candidate said:", accumilated_text)
+                    print("Candidate said:", accumilated_text ," at time ",elapsed_time)
 
                     # Measure time for LLM processing
                     start_llm = time.time()
@@ -265,6 +259,29 @@ async def websocket_handler(client_ws):
                     llm_speaking.set()
 
                     if exit_message in llm_response:
+                        print(call_logs)
+                        deepgram_ready.clear() 
+                        asyncio.sleep(6)
+                        twilio_service_instance.client.calls(call_sid["value"]).fetch().update(status="completed")
+                        call_status = twilio_service_instance.client.calls(call_sid["value"]).fetch().status
+                        call_instance_output = next((d for d in shared_data["call_instance_list"] if d["call_sid"]==call_sid["value"]),None)
+                        shared_data["call_instance_list"] = [
+                            item for item in shared_data["call_instance_list"] if item != call_instance_output
+                            ]
+
+                        if call_instance_output is not None:
+                            call_instance_output["call_status"]= call_status_mapping.get(call_status)
+                            call_instance_output["transcript"]=call_logs
+                            call_instance_output["callS_start_time"]=datetime.fromtimestamp(call_start_time).isoformat()
+                            call_instance_output["call_end_time"]=datetime.fromtimestamp(time.time()).isoformat()
+                            call_instance_output["event"]="aiCallEnded"
+                            call_instance_output.pop(call_sid["value"],None)
+                            print(call_instance_output)
+                            await sns_publisher(message_payload=call_instance_output,sns_client=sns_client)
+                        call_start_time =None
+
+                        llm_speaking.clear()
+                        
                         print("Call is ended")
                         # Measure time for Twilio call update
                         start_twilio = time.time()
@@ -272,9 +289,12 @@ async def websocket_handler(client_ws):
                         end_twilio = time.time()
                         twilio_time = end_twilio - start_twilio
                         print(f"Twilio update time: {twilio_time:.2f} seconds")
-                        print(twilio_service_instance.client.calls(call_sid["value"]).fetch())
-                        print(twilio_service_instance.client.calls(call_sid["value"]).fetch()["status"])
-                elif elapsed_time > 5 and not accumilated_text :
+                        print(twilio_service_instance.client.calls(call_sid["value"]).fetch().status)
+
+
+
+                
+                elif elapsed_time > 5 and not accumilated_text and not llm_speaking.is_set():
                     silence_message = "You are not audible, could you repeat please?"
                     await text_2_stream(silence_message)
                     await send_mark()
@@ -309,8 +329,11 @@ async def poll_queue():
                     else:
                         print("invalid phone number , Call is rejected. ")
                         message_dict["call_sid"] = "call.sid"
-
+                    
+                    message_dict["wait_n_mins"] = 3
+                    print(message_dict," is the incoming dict")
                     shared_data["call_instance_list"].append(message_dict)
+
                     await client.delete_message(
                         QueueUrl=queue_url,
                         ReceiptHandle=message['ReceiptHandle']
@@ -324,8 +347,29 @@ async def poll_queue():
                 print("No messages received.")
             await asyncio.sleep(5)
 
+async def recall_and_status():
+    while True:
+        print(shared_data["call_instance_list"])
+        for instance in shared_data["call_instance_list"]:
+            twilio_service = TwilioService()
+            call_status = twilio_service.client.calls(instance["call_sid"]).fetch().status
+            print("call status is ",call_status)
+            if call_status_mapping.get(call_status) in [0,2,3,4,5] :
+                if instance["wait_n_mins"] == 0:
+                    call= twilio_service.initiate_call(from_number=twilio_no, to_number = instance["mobileNumber"], websocket_url=websocket_url)
+                    instance["call_sid"] = call.sid
+                    instance["wait_n_mins"]=3
+                    print(call_status," is newly checked status")
+                else:
+                    instance["wait_n_mins"] -= 1
+
+        await asyncio.sleep(60)
+
+
+
 async def main():
     asyncio.create_task(poll_queue())
+    asyncio.create_task(recall_and_status())
     ws_server = await websockets.serve(websocket_handler, '0.0.0.0', 5001)  # Port 5001 for AI screening WebSocket
     await ws_server.wait_closed()
     print("Ending websocket")
@@ -333,3 +377,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

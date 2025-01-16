@@ -1,39 +1,32 @@
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import LLMChain
-from langchain_groq import ChatGroq
-from langchain_openai import ChatOpenAI
-from langchain.prompts import (
-    ChatPromptTemplate,
-    MessagesPlaceholder,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
-from langchain.chains import LLMChain
+import boto3
+import configparser
 
+
+# Load configuration
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+model_id = config.get('llm', 'model_id')
 
 class LanguageModelProcessor:
-    def __init__(self, system_prompt: str,llm_model:str,llm_api_key:str):
-        self.llm = ChatGroq(temperature=0, model_name=llm_model, groq_api_key=llm_api_key)
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    def __init__(self):
+        # Initialize Bedrock LLM
+        self.llm = boto3.client(
+            "bedrock-runtime",
+        )
+        self.model_id = "meta.llama3-3-70b-instruct-v1:0"
 
         with open('system_prompt.txt', 'r') as file:
             system_prompt = file.read().strip()
-        
-        self.prompt = ChatPromptTemplate.from_messages([
-            SystemMessagePromptTemplate.from_template(system_prompt),
-            MessagesPlaceholder(variable_name="chat_history"),
-            HumanMessagePromptTemplate.from_template("{text}")
-        ])
+        self.messages = [{"role":"user","content":[{"text":system_prompt}]}]
 
-        self.conversation = LLMChain(
-            llm=self.llm,
-            prompt=self.prompt,
-            memory=self.memory
-        )
- 
     def process(self, text: str) -> str:
-        self.memory.chat_memory.add_user_message(text)
-        response = self.conversation.run({"text": text})
-        self.memory.chat_memory.add_ai_message(response)
-        return response
+        self.messages[0]["content"][0]["text"]+=f"role :user ,content:{text}\n"
+        response = self.llm.converse(
+            modelId=self.model_id,
+            messages=self.messages,
+        )
+        response_text = response["output"]["message"]["content"][0]["text"]
+        self.messages[0]["content"][0]["text"]+=f"role :agent ,content:{response_text}\n"
+        return response_text
+

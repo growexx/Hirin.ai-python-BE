@@ -1,12 +1,21 @@
 from elevenlabs import VoiceSettings
 from elevenlabs.client import ElevenLabs
 import base64
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+tts_voice_id = config.get('tts', 'voice_id')
+elevenlabs_api_key = config.get('tts', 'api_key')
+elevenlabs_model = config.get('tts', 'tts_model')
+
 
 class ElevenLabsService:
-    def __init__(self, api_key: str, voice_id: str, model_id: str):
-        self.client = ElevenLabs(api_key=api_key)
-        self.voice_id = voice_id
-        self.model_id = model_id
+    def __init__(self):
+        self.client = ElevenLabs(api_key=elevenlabs_api_key)
+        self.voice_id = tts_voice_id
+        self.model_id = elevenlabs_model
         self.voice_settings = VoiceSettings(stability=0.6, similarity_boost=1.0, style=0.1, use_speaker_boost=True)
  
     async def text_to_speech(self, text: str):
@@ -19,3 +28,4 @@ class ElevenLabsService:
         )
         for chunk in audio_stream:
             yield base64.b64encode(chunk).decode('utf-8')
+
