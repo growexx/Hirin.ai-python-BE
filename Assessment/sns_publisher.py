@@ -16,7 +16,7 @@ async def send_message_to_sns_async(topic_arn, data, role):
             'sns',
             region_name=AWS_REGION
         ) as sns_client:
-            sns_message = json.dumps(data, indent=2)
+            sns_message = json.dumps(data)
             publish_params = {
                 'TopicArn': topic_arn,
                 'Message': sns_message,
