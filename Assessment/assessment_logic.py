@@ -7,33 +7,31 @@ import json
 def extract_assessment_data(assessments):
     try:
 
-        print(f"type: {type(assessments)}")
+        logger.info(f"type: {type(assessments)}")
         message = assessments.get('Message',None)
-        print(f"message: {message}")
+        logger.info(f"message: {message}")
         if not message:
             return None, None, None, None, None
 
         parsed_message = json.loads(message)
         
         metadata = parsed_message['metadata']
-
-        # print("Metadata:", metadata)
+        logger.info("Metadata:", metadata)
 
         role = parsed_message["role"]
-        # print("Role:", role)
+        logger.info("Role:", role)
 
         job_description = parsed_message["job_description"]
-        # print("Job Description:", job_description)
+        logger.info("Job Description:", job_description)
 
         level_of_seniority = parsed_message["level_of_seniority"]
-        # print("Level of Seniority:", level_of_seniority)
+        logger.info("Level of Seniority:", level_of_seniority)
 
         questions = parsed_message["questions"]
-        # print("Questions:", questions)
+        logger.info("Questions:", questions)
 
         questions_json = {"questions": questions}
-        # print("Questions JSON:", questions_json)
-
+        logger.info("Questions JSON:", questions_json)
 
         # Check if any essential data is None
         if any(x is None for x in [metadata, role, job_description, level_of_seniority, questions_json]):
@@ -46,513 +44,384 @@ def extract_assessment_data(assessments):
         logger.error(f"Failed to extract assessment data: {e}")
         return None, None, None, None, None
 
-
-def unified_assessment(metadata, role, job_description, level_of_seniority, questions_json, api_key, model):
+def extract_soft_skills(job_description):
     try:
-        if any(x is None for x in [metadata, role, job_description, level_of_seniority, questions_json]):
-            logger.error("Missing essential data for unified assessment.")
+        # Define regex patterns to extract Must-Have and Good-to-Have soft skills
+        must_have_pattern = r"Must-Have Soft Skills:\s*(.*?)\n\s*(Good-to-Have|$)"
+        good_to_have_pattern = r"Good-to-Have Soft Skills:\s*(.*?)(?:\n|$)"
+
+        # Extract Must-Have Soft Skills
+        must_have_match = re.search(must_have_pattern, job_description, re.DOTALL)
+        must_have_soft_skills = (
+            [skill.strip() for skill in must_have_match.group(1).split("\n") if skill.strip()]
+            if must_have_match
+            else []
+        )
+
+        # Extract Good-to-Have Soft Skills
+        good_to_have_match = re.search(good_to_have_pattern, job_description, re.DOTALL)
+        good_to_have_soft_skills = (
+            [skill.strip() for skill in good_to_have_match.group(1).split("\n") if skill.strip()]
+            if good_to_have_match
+            else []
+        )
+
+        # Structure the result
+        soft_skills = {
+            "must_have": must_have_soft_skills,
+            "good_to_have": good_to_have_soft_skills,
+        }
+        return soft_skills
+    except Exception as e:
+        return {"error:":e, "must_have": [], "good_to_have": []}
+
+def unified_assessment(metadata, role, job_description, questions_json, soft_skills, brt, model_id):
+    try:
+        if any(x is None for x in [metadata, role, job_description, questions_json, soft_skills]):
+            # logger.error("Missing essential data for unified assessment.")
             return None
 
-        print("Metadata:", metadata)
-        print("Role:", role)
-        print("Job Description:", job_description)
-        print("Level of Seniority:", level_of_seniority)
-        print("Questions JSON:", questions_json)
-
+        # Construct the prompt for assessment
         prompt_for_assessment = f"""
             You are a seasoned and rigorous evaluator tasked with assessing a candidate's responses during a structured interview.
-            Your goal is to evaluate technical skills for each question and soft skills collectively across all responses, considering the job role, description, and level of seniority provided.
+            Your goal is to evaluate:
+            1. Technical skills for each question and soft skills collectively across all responses, considering the job role, description, and level of seniority from the job description and input variables provided.
+            2. Identify and assess specific soft skills from the job description and assign individual scores to each identified soft skill.
 
-            Candidate Details:
+            ---
+
+            ### Candidate Details:
             - Job Role: {role}
-            - Level of Seniority: {level_of_seniority}
             - Job Description: {job_description}
+
+            Soft Skills from Job Description:
+            {soft_skills}
 
             Questions and Responses:
             {questions_json}
 
-            Evaluation Criteria:
+            ---
 
-            1. Soft Skills Assessment:
-            Consider all the answers and evaluate the soft skills of the interviewee.
-            - Soft Skills Identified: List the key soft skills demonstrated or implied across all responses.
-            - Soft Skills Score: Assign a collective score out of 5 based on relevance, clarity, and effectiveness shown across all answers.
-            - Reasoning: Briefly explain why the soft skills were identified and justify the score assigned.
+            ### Evaluation Criteria:
 
-            2. Technical Assessment (Per Question):
+            i] Soft Skills Assessment:
+            1. From the {soft_skills} provided, identify the main soft skills and evaluate each soft skill identified.
+            2. For each soft skill, provide:
+                - Identified Soft Skill: The soft skill in 2 words.
+                - Soft Skill Score: Assign a score out of 10 based on the relevance and clarity of the candidate's answers in demonstrating this skill.
+                - Justification: Briefly explain why the score was assigned, referring to the responses where applicable.
+
+            ii] Overall Soft Skills Evaluation:
+            - Strengths: Summarize the candidate's key strengths based on the identified soft skills.
+            - Areas of Improvement: Highlight areas where the candidate needs to improve with regard to the identified soft skills.
+            - Recommendation: Actionable items for the recruiter to assess the candidate (in the next round or for training purposes).
+            Note: Provide 2 points for each section, but allow up to 3 points when necessary to fully address the strengths, areas of improvement, or recommendations.
+
+            iii] Technical Assessment (Per Question):
             For each question, provide the following detailed evaluation:
             - Question: The question asked.
             - Technical Skill: The specific technical skill(s) assessed in the question.
-            - Score: Assign a score out of 5 based on the following dimensions:
+            - Skill Type: Either it is a Must-have skill or Good-to-have skill from Job description.
+            - Score: Assign a score out of 10 based on the following dimensions:
                 - Relevance: How directly the answer addresses the question.
                 - Clarity: How well the answer is articulated and structured.
                 - Depth: How comprehensively the candidate demonstrates knowledge and understanding.
                 - Accuracy: Whether the answer contains any incorrect or misleading information.
                 - Alignment with Seniority: How well the answer matches expectations for the stated level of seniority.
-            - Evaluation Comment: Provide a precise, concise, and constructive comment highlighting strengths and areas for improvement.
+            - Evaluation Comment: Provide a precise, concise, and constructive comment that aligns with the assigned score, highlighting strengths and areas for improvement.
 
-            Scoring Guidance:
-            - A score of 5 reflects exceptional alignment with expectations for the given criterion and seniority level.
-            - A score of 3 reflects satisfactory performance with room for improvement.
-            - A score of 0 reflects significant shortcomings.
+            ---
 
-            Output Format:
+            ### **Scoring Guidelines**:
+            - A score of 10: Exceptional alignment with expectations, clear evidence of mastery, and no significant weaknesses.
+            - A score of 7-9: Strong performance with minor gaps or areas for improvement.
+            - A score of 4-6: Satisfactory performance, but significant room for improvement.
+            - A score of 1-3: Poor performance, lacking key aspects, or significant weaknesses.
+            - A score of 0: No demonstration of the required skill or entirely unsatisfactory response.
+
+            ### **Output Format**:
             For Soft Skills:
-            *Soft Skills Identified*: [List soft skills]
-            *Soft Skills Score*: [0-5]
-            *Soft Skills Reasoning*: [Reason for score]
+            Soft Skill: [Soft skill name]
+            Score: [Soft skill score (0-10)]
+            Justification: [Reason for the score]
+
+            For Overall Soft Skills:
+            1.Strengths: [Key strengths related to soft skills]
+            2.Areas of Improvement: [Key improvement areas related to soft skills]
+            3.Recommendations: [Key actionable items for recruiter]
 
             For each question:
-            *Question ID*:
-            *Question*: [The question asked]
-            *Skill*: [The skill mentioned for the question]
-            *Technical Score*: [0-5]
-            *Technical Evaluation Comment*: [Comment]
+            Question ID: [The Question ID]
+            Question: [The question asked]
+            Skill: [The skill mentioned for the question]
+            Skill Type: [The skill type this skill falls under in Job Description]
+            Technical Score: [0-10]
+            Technical Evaluation Comment: [Comment]
 
-            Instructions:
+            ---
+
+            ### **Reminder**:
+            - DO NOT INCLUDE COMMENTARY OR EXTRA NOTES.
+            - FOLLOW THE OUTPUT FORMAT STRICTLY.
             - Be strict and unbiased in your evaluation.
-            - Provide concise yet thorough reasoning for all scores.
-            - DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES BEYOND THE OUTPUT FORMAT.
         """
 
-        client = Groq(api_key=api_key)
-        llm_response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "system", "content": prompt_for_assessment}]
+        conversation = [
+            {
+                "role": "user",
+                "content": [{"text": prompt_for_assessment}],
+            }
+        ]
+
+        # Send the message to the model
+        response = brt.converse(
+            modelId=model_id,
+            messages=conversation
         )
-        # logger.info("Unified assessment completed successfully.")
-        return llm_response.choices[0].message.content if llm_response else None
+
+        # Extract and logger.info the response text.
+        response_text = response["output"]["message"]["content"][0]["text"]
+        return response_text
+        logger.info("Unified assessment completed successfully.")
     except Exception as e:
         logger.error(f"Failed to generate unified assessment: {e}")
         return None
 
-
-# def add_skills_to_assessment_result(assessment_result, assessments):
-#     try:
-#         assessment_result = assessment_result
-#         assessments = assessments
-
-#         if assessment_result is None or assessments is None:
-#             logger.error("Invalid data received for skill addition.")
-#             return None
-
-#         print("inside add skills to assessment result, assessment_result :: ",assessment_result)
-#         print("inside add skills to assessment result, assessments :: ", assessments)
-#         result_lines = assessment_result.split("\n")
-#         questions_by_text = {q["question"]: q for q in assessments["questions"]}
-
-#         updated_result_lines = []
-#         current_question_text = None
-
-#         for line in result_lines:
-#             if line.startswith("*Question*:"):
-#                 current_question_text = line.split(":")[1].strip().strip("*")
-#                 updated_result_lines.append(line)
-#             elif current_question_text and line.startswith("*Technical Score*:"):
-#                 skill = questions_by_text.get(current_question_text, {}).get("skill", "Unknown Skill")
-#                 updated_result_lines.append(f"*Skill*: {skill}")
-#                 updated_result_lines.append(line)
-#             else:
-#                 updated_result_lines.append(line)
-
-#         return "\n".join(updated_result_lines)
-#     except Exception as e:
-#         logger.error(f"Failed to add skills to assessment result: {e}")
-#         return None
-
-
 def parse_assessment_result(data):
     try:
-        if data is None:
-            logger.error("No assessment result data to parse.")
-            return None, None, None, None, None
+        soft_skill_matches = re.findall(r"(\d+)\.\s(.+?)\nScore:\s(\d+)\nJustification:\s(.+?)\n", data)
+        soft_skills_list = []
+        soft_skills_data = {}
 
-        soft_skills_match = re.search(
-            r"\*Soft Skills Identified\*: (.+?)\n\*Soft Skills Score\*: (\d+)\n\*Soft Skills Reasoning\*: (.+)", data
-        )
-        soft_skills_identified = soft_skills_match.group(1) if soft_skills_match else "N/A"
-        soft_skills_score = int(soft_skills_match.group(2)) if soft_skills_match else 0
-        soft_skills_reasoning = soft_skills_match.group(3) if soft_skills_match else "N/A"
+        for _, skill, score, justification in soft_skill_matches:
+            soft_skills_list.append(skill)
+            soft_skills_data[skill] = {
+                "score": int(score),
+                "justification": justification.strip()
+            }
 
+        # Extract strengths, areas of improvement, and recommendations
+        strengths = re.search(r"Strengths:\s*((?:- .+\n?)+)", data)
+        areas_of_improvement = re.search(r"Areas of Improvement:\s*((?:- .+\n?)+)", data)
+        recommendations = re.search(r"Recommendations:\s*((?:- .+\n?)+)", data)
+
+        # Process each section into lists of points
+        strengths_list = [point.strip("- ").strip() for point in strengths.group(1).strip().split("\n") if point.strip()] if strengths else []
+        areas_of_improvement_list = [point.strip("- ").strip() for point in areas_of_improvement.group(1).strip().split("\n") if point.strip()] if areas_of_improvement else []
+        recommendations_list = [point.strip("- ").strip() for point in recommendations.group(1).strip().split("\n") if point.strip()] if recommendations else []
+
+        # Extract questions
         questions = re.findall(
-            r"\*Question\*: (.+?)\n\*Skill\*: (.+?)\n\*Technical Score\*: (\d+)\n\*Technical Evaluation Comment\*: (.+?)(?:\n|$)",
-            data
+            r"Question ID:\s(\w+)\nQuestion:\s(.+?)\nSkill:\s(.+?)\nSkill Type:\s(.+?)\nTechnical Score:\s(\d+)\nTechnical Evaluation Comment:\s(.+?)(?:\n|$)",
+            data,
+            re.DOTALL  # To handle multiline comments
         )
 
-        skills_scores = defaultdict(lambda: {"total": 0, "count": 0, "max": 0})
-        for _, skill, score, _ in questions:
+        # Calculate technical skill-wise scores
+        technical_scores = defaultdict(lambda: {"total": 0, "max": 0})
+        for _, _, skill, _, score, _ in questions:
             score = int(score)
-            skills_scores[skill]["total"] += score
-            skills_scores[skill]["count"] += 1
-            skills_scores[skill]["max"] += 5
+            technical_scores[skill]["total"] += score
+            technical_scores[skill]["max"] += 10  # Assuming max score per question is 10
 
-        skill_summary = {skill: {"total": scores["total"], "max": scores["max"]} for skill, scores in skills_scores.items()}
+        return (
+            soft_skills_list,
+            [details["score"] for details in soft_skills_data.values()],
+            [details["justification"] for details in soft_skills_data.values()],
+            soft_skills_data,
+            strengths_list,
+            areas_of_improvement_list,
+            recommendations_list,
+            questions,
+            technical_scores,
+        )
 
-        logger.info("Assessment result parsed successfully.")
-        return soft_skills_identified, soft_skills_score, soft_skills_reasoning, questions, skill_summary
     except Exception as e:
         logger.error(f"Failed to parse assessment result: {e}")
         return None, None, None, None, None
 
 
-def calculate_candidate_score(questions):
+def calculate_total_scores(questions):
     try:
         if not questions:
             logger.error("No questions available to calculate candidate score.")
             return None
 
-        score = sum(int(score) for _, _, score, _ in questions)
-        logger.info(f"Candidate score calculated: {score}")
-        return score
+        total_score = sum(int(score) for _, _, _, _, score, _ in questions)
+        possible_score = len(questions) * 10
+
+        logger.info(f"Candidate score calculated: {total_score}")
+        return total_score, possible_score
+
     except Exception as e:
         logger.error(f"Failed to calculate candidate score: {e}")
         return None
 
-
-def calculate_total_possible_score(questions):
+def calculate_soft_skill_scores(soft_skill_scores):
     try:
-        if not questions:
-            logger.error("No questions available to calculate total possible score.")
+        if not soft_skill_scores:
+            logger.error("No soft skill scores available.")
             return None
 
-        total_score = len(questions) * 5
-        logger.info(f"Total possible score calculated: {total_score}")
-        return total_score
+        total_soft_skill_score = sum(soft_skill_scores)
+        total_possible_soft_skill_score = len(soft_skill_scores) * 10
+
+        logger.info(f"Total soft skill scores calculated: {total_soft_skill_score, total_possible_soft_skill_score}")
+        return total_soft_skill_score, total_possible_soft_skill_score
     except Exception as e:
-        logger.error(f"Failed to calculate total possible score: {e}")
+        logger.info(f"Error in calculate_soft_skill_scores: {e}")
         return None
 
-
-def skill_wise_assessment(questions, skill_scores, api_key, model):
+def skill_wise_assessment(questions, skill_scores, brt, model_id):
     try:
         if not questions or not skill_scores:
             logger.error("Missing questions or skill scores for skill-wise assessment.")
             return None
 
         prompt_for_skill_wise_assessment = f"""
-            You are an expert evaluator tasked with assessing the candidate's performance based on the following data.
+        You are an expert evaluator tasked with assessing the candidate's overall technical performance based on the following data.
 
             Your goal is to provide:
-            1. Skill-wise scores: Evaluate each skill based on the scores provided.
-            2. Strengths: Highlight the candidate's general strengths for each skill.
-            3. Areas of Improvement: Identify the general areas where the candidate needs to improve for each skill.
+            1. A summary of the candidate's general strengths across all technical skills.
+            2. A summary of the general areas where the candidate needs to improve across all technical skills.
+            3. Actionable items for the recruiter to assess the candidate for technical skills.
 
-            Technical Skills and Evaluations:
+            ### Technical Skills and Evaluations:
             {questions} (this contains the question, skill, score out of 5, evaluation comment)
             {skill_scores} (these contain the total score for each skill and the max possible score)
 
-            Output Format:
-            For each skill:
-            -*Skill*: [Skill Name]
-            -*Total Score*: [Total score for the skill]
-            -*Strengths*: [List the strengths]
-            -*Areas of Improvement*: [List the improvement areas]
+            ### Output Format:
+            Technical Performance Summary:
+            1.Strengths: [List the general strengths across all technical skills]
+            2.Areas of Improvement: [List the general improvement areas across all technical skills]
 
-            Instructions:
-            -Based on the comments and scores, identify strengths and areas of improvement for each skill.
-            -DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES BEYOND THE OUTPUT FORMAT.
+            Overall Recommendations:
+            -Provide recommendations or actionable items for the recruiter to assess the candidate (in the next round or for training purposes).
+
+            ### Reminder:
+            - Based on the comments and scores, provide an overall evaluation of the strengths and areas for improvement across all technical skills.
+            - Provide 2 points for each section, but allow up to 3 points when necessary to fully address the strengths, areas of improvement, or recommendations.
+            - DO NOT INCLUDE COMMENTARY OR EXTRA NOTES.
+            - FOLLOW THE OUTPUT FORMAT STRICTLY.
         """
 
-        client = Groq(api_key=api_key)
-        llm_response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "system", "content": prompt_for_skill_wise_assessment}]
+        response = brt.converse(
+            modelId=model_id,
+            messages=[{"role": "user", "content": [{"text": prompt_for_skill_wise_assessment}]}]
         )
-        logger.info("Skill-wise assessment completed successfully.")
-        return llm_response.choices[0].message.content if llm_response else None
+    
+        response_text = response["output"]["message"]["content"][0]["text"]
+        return response_text
+    
     except Exception as e:
         logger.error(f"Failed to complete skill-wise assessment: {e}")
         return None
 
-
-def end_assessment(result, soft_skills_identified, soft_skills_score, candidate_score, soft_skills_reasoning, api_key, model):
+def extract_technical_summary(technical_result):
     try:
-        if any(x is None for x in [result, soft_skills_identified, soft_skills_score, candidate_score, soft_skills_reasoning]):
+        # Regular expressions to extract the different parts of the result
+        strengths_pattern = r"Strengths:\s*([\s\S]+?)\s*2"
+        areas_of_improvement_pattern = r"Areas of Improvement:\s*([\s\S]+?)\s*Overall Recommendations:"
+        recommendations_pattern = r"Overall Recommendations:\s*([\s\S]+)"
+
+        # Extract strengths, areas of improvement, and recommendations using the regular expressions
+        strengths = re.search(strengths_pattern, technical_result)
+        areas_of_improvement = re.search(areas_of_improvement_pattern, technical_result)
+        recommendations = re.search(recommendations_pattern, technical_result)
+
+        # Initialize the individual variables
+        technical_skill_strengths = []
+        areas_of_improvement_list = []
+        recommendations_list = []
+
+        if strengths:
+            # Clean and split the strengths section into lines, ignoring extra spaces
+            technical_skill_strengths = [line.strip() for line in strengths.group(1).split('\n') if line.strip()]
+
+        if areas_of_improvement:
+            # Clean and split the areas of improvement section into lines
+            areas_of_improvement_list = [line.strip() for line in areas_of_improvement.group(1).split('\n') if line.strip()]
+
+        if recommendations:
+            # Clean and split the recommendations section into lines
+            recommendations_list = [line.strip() for line in recommendations.group(1).split('\n') if line.strip()]
+
+        # Return the variables as a tuple or a dictionary of individual variables
+        return technical_skill_strengths, areas_of_improvement_list, recommendations_list
+
+    except Exception as e:
+        logger.info(f"Error extracting technical summary: {e}")
+        return [], [], []
+
+
+def end_assessment(technical_result, soft_skills_data, candidate_score, brt, model_id):
+    try:
+        if any(x is None for x in [technical_result, soft_skills_data, candidate_score]):
             logger.error("Invalid data received for overall assessment.")
             return None
 
-        prompt_for_overall_assessment = f"""
-            Based on the following input, generate a detailed overall assessment that highlights the strengths and areas of improvement.
+        prompt_for_recruiter_assessment = f"""
+        Based on the following input, generate a detailed overall assessment for a recruiter 
+        that highlights the strengths, areas of improvement, and actionable recommendations for the candidate's evaluation process.
 
-            Input:
-                1.Technical skills data: {result}
-                    - this contains the skill, total score scored by interviewee in that skill, strengths and weaknesses of that skill
-                2.Soft Skills data:
-                    soft skills identified: {soft_skills_identified}
-                    soft skills score: {soft_skills_score}
-                    soft skills reasoning: {soft_skills_reasoning}
-                3.Candidate total score for technical skills: {candidate_score}
+            ### Input:
+                1. Technical Skills Summary:
+                    - {technical_result}
+                    (Includes the candidate's overall performance across technical skills, with strengths and weaknesses for each skill.)
+                2. Soft Skills Data:
+                    - {soft_skills_data}
+                    (Detailed breakdown of the candidate's performance in soft skills, including scores and justifications.)
+                3. Candidate's Total Technical Score:
+                    - {candidate_score}
 
-            Consider the input data. Provide a concise and structured response with the following sections:
-            - Overall Strengths: A summary of key strengths derived from the provided scores and reasoning.
-            - Areas of Improvement: A summary of areas that require attention.
-            - Suggestions: Provide actionable suggestions where possible for technical and soft skills.
+            ### Provide a structured response for the recruiter under the following sections:
+            Strengths: Summarize the key strengths derived from the input.
+            Areas of Improvement: Highlight the areas that require further development.
+            Recommendations: Provide actionable items for the next evaluation round or training purposes.
 
-            Output Format:
-            *Strengths*:
-            *Areas of Improvement*:
+            ### Guidelines:
+            - Include 2 points per section, with up to 3 points if necessary to fully address the insights.
+            - DO NOT INCLUDE COMMENTARY OR EXTRA NOTES.
+            - FOLLOW THE OUTPUT FORMAT STRICTLY.
 
-            Instructions:
-            - Ensure the assessment is professional and easy to interpret.
-            - DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES BEYOND THE OUTPUT FORMAT.
+            ### Output Format:
+            1.Strengths:
+            - [List key strengths]
+            2.Areas of Improvement:
+            - [List areas requiring improvement]
+            3.Recommendations:
+            - [List actionable recommendations]
         """
 
-        client = Groq(api_key=api_key)
-        llm_response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "system", "content": prompt_for_overall_assessment}]
+        response = brt.converse(  # Example, change this line to match the API you're using
+            modelId=model_id,
+            messages=[{"role": "user", "content": [{"text": prompt_for_recruiter_assessment}]}]
         )
-        logger.info("Overall assessment generated successfully.")
-        return llm_response.choices[0].message.content if llm_response else None
+    
+        # Extract and logger.info the response text
+        response_text = response["output"]["message"]["content"][0]["text"]
+        return response_text
     except Exception as e:
         logger.error(f"Failed to generate overall assessment: {e}")
         return None
 
+def extract_assessment_sections(end_assessment_result):
+    try:
+        # Split the assessment result by the section headings
+        strengths_section = end_assessment_result.split("Strengths:")[1].split("2")[0].strip()
+    except IndexError:
+        strengths_section = "No strengths section found."
 
+    try:
+        areas_of_improvement_section = end_assessment_result.split("Areas of Improvement:")[1].split("3")[0].strip()
+    except IndexError:
+        areas_of_improvement_section = "No areas of improvement section found."
 
-
-
-
-
-
-
-
-
-
-
-
-# import re
-# from collections import defaultdict
-# from groq import Groq
-# from logger.logger_config import logger
-
-# def extract_assessment_data(assessments):
-#     try:
-#         metadata = assessments.get("metadata", {})
-#         role = assessments.get("role", "")
-#         job_description = assessments.get("job_description", "")
-#         level_of_seniority = assessments.get("level_of_seniority", "")
-#         questions = assessments.get("questions", [])
-#         questions_json = {"questions": questions}
-
-#         logger.info("Successfully extracted assessment data.")
-#         return metadata, role, job_description, level_of_seniority, questions_json
-#     except Exception as e:
-#         logger.error(f"Failed to extract assessment data: {e}")
-#         raise
-
-# def unified_assessment(metadata, role, job_description, level_of_seniority, questions_json, api_key, model):
-#     try:
-#         prompt_for_assessment = f"""
-#             You are a seasoned and rigorous evaluator tasked with assessing a candidate's responses during a structured interview.
-#             Your goal is to evaluate technical skills for each question and soft skills collectively across all responses, considering the job role, description, and level of seniority provided.
-
-#             Candidate Details:
-#             - Job Role: {role}
-#             - Level of Seniority: {level_of_seniority}
-#             - Job Description: {job_description}
-
-#             Questions and Responses:
-#             {questions_json}
-
-#             Evaluation Criteria:
-
-#             1. Soft Skills Assessment:
-#             Consider all the answers and evaluate the soft skills of the interviewee.
-#             - Soft Skills Identified: List the key soft skills demonstrated or implied across all responses.
-#             - Soft Skills Score: Assign a collective score out of 5 based on relevance, clarity, and effectiveness shown across all answers.
-#             - Reasoning: Briefly explain why the soft skills were identified and justify the score assigned.
-
-#             2. Technical Assessment (Per Question):
-#             For each question, provide the following detailed evaluation:
-#             - Question: The question asked.
-#             - Technical Skill: The specific technical skill(s) assessed in the question.
-#             - Score: Assign a score out of 5 based on the following dimensions:
-#                 - Relevance: How directly the answer addresses the question.
-#                 - Clarity: How well the answer is articulated and structured.
-#                 - Depth: How comprehensively the candidate demonstrates knowledge and understanding.
-#                 - Accuracy: Whether the answer contains any incorrect or misleading information.
-#                 - Alignment with Seniority: How well the answer matches expectations for the stated level of seniority.
-#             - Evaluation Comment: Provide a precise, concise, and constructive comment highlighting strengths and areas for improvement.
-
-#             Scoring Guidance:
-#             - A score of 5 reflects exceptional alignment with expectations for the given criterion and seniority level.
-#             - A score of 3 reflects satisfactory performance with room for improvement.
-#             - A score of 0 reflects significant shortcomings.
-
-#             Output Format:
-#             For Soft Skills:
-#             *Soft Skills Identified*: [List soft skills]
-#             *Soft Skills Score*: [0-5]
-#             *Soft Skills Reasoning*: [Reason for score]
-
-#             For each question:
-#             *Question ID*:
-#             *Question*: [The question asked]
-#             *Technical Score*: [0-5]
-#             *Technical Evaluation Comment*: [Comment]
-
-#             Instructions:
-#             - Be strict and unbiased in your evaluation.
-#             - Provide concise yet thorough reasoning for all scores.
-#             - DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES BEYOND THE OUTPUT FORMAT.
-#             """ # For brevity, prompt content is the same as before.
-
-#         client = Groq(api_key=api_key)
-#         llm_response = client.chat.completions.create(
-#             model=model,
-#             messages=[{"role": "system", "content": prompt_for_assessment}]
-#         )
-#         logger.info("Unified assessment completed successfully.")
-#         return llm_response.choices[0].message.content
-#     except Exception as e:
-#         logger.error(f"Failed to generate unified assessment: {e}")
-#         raise
-
-# def add_skills_to_assessment_result(assessment_result, assessments):
-#     try:
-#         result_lines = assessment_result.split("\n")
-#         questions_by_text = {q["question"]: q for q in assessments["questions"]}
-
-#         updated_result_lines = []
-#         current_question_text = None
-
-#         for line in result_lines:
-#             if line.startswith("*Question*:"):
-#                 current_question_text = line.split(":")[1].strip().strip("*")
-#                 updated_result_lines.append(line)
-#             elif current_question_text and line.startswith("*Technical Score*:"):
-#                 skill = questions_by_text.get(current_question_text, {}).get("skill", "Unknown Skill")
-#                 updated_result_lines.append(f"*Skill*: {skill}")
-#                 updated_result_lines.append(line)
-#             else:
-#                 updated_result_lines.append(line)
-
-#         logger.info("Skills successfully added to assessment result.")
-#         return "\n".join(updated_result_lines)
-#     except Exception as e:
-#         logger.error(f"Failed to add skills to assessment result: {e}")
-#         raise
-
-# def parse_assessment_result(data):
-#     try:
-#         soft_skills_match = re.search(
-#             r"\*Soft Skills Identified\*: (.+?)\n\*Soft Skills Score\*: (\d+)\n\*Soft Skills Reasoning\*: (.+)", data
-#         )
-#         soft_skills_identified = soft_skills_match.group(1) if soft_skills_match else "N/A"
-#         soft_skills_score = int(soft_skills_match.group(2)) if soft_skills_match else 0
-#         soft_skills_reasoning = soft_skills_match.group(3) if soft_skills_match else "N/A"
-
-#         questions = re.findall(
-#             r"\*Question\*: (.+?)\n\*Skill\*: (.+?)\n\*Technical Score\*: (\d+)\n\*Technical Evaluation Comment\*: (.+?)(?:\n|$)",
-#             data
-#         )
-
-#         skills_scores = defaultdict(lambda: {"total": 0, "count": 0, "max": 0})
-#         for _, skill, score, _ in questions:
-#             score = int(score)
-#             skills_scores[skill]["total"] += score
-#             skills_scores[skill]["count"] += 1
-#             skills_scores[skill]["max"] += 5
-
-#         skill_summary = {skill: {"total": scores["total"], "max": scores["max"]} for skill, scores in skills_scores.items()}
-
-#         logger.info("Assessment result parsed successfully.")
-#         return soft_skills_identified, soft_skills_score, soft_skills_reasoning, questions, skill_summary
-#     except Exception as e:
-#         logger.error(f"Failed to parse assessment result: {e}")
-#         raise
-
-# def calculate_candidate_score(questions):
-#     try:
-#         score = sum(int(score) for _, _, score, _ in questions)
-#         logger.info(f"Candidate score calculated: {score}")
-#         return score
-#     except Exception as e:
-#         logger.error(f"Failed to calculate candidate score: {e}")
-#         raise
-
-# def calculate_total_possible_score(questions):
-#     try:
-#         total_score = len(questions) * 5
-#         logger.info(f"Total possible score calculated: {total_score}")
-#         return total_score
-#     except Exception as e:
-#         logger.error(f"Failed to calculate total possible score: {e}")
-#         raise
-
-# def skill_wise_assessment(questions, skill_scores, api_key, model):
-#     try:
-#         prompt_for_skill_wise_assessment = f"""
-#             You are an expert evaluator tasked with assessing the candidate's performance based on the following data.
-
-#             Your goal is to provide:
-#             1. Skill-wise scores: Evaluate each skill based on the scores provided.
-#             2. Strengths: Highlight the candidate's general strengths for each skill.
-#             3. Areas of Improvement: Identify the general areas where the candidate needs to improve for each skill.
-
-#             Technical Skills and Evaluations:
-#             {questions} (this contains the question, skill, score out of 5, evaluation comment)
-#             {skill_scores} (these contain the total score for each skill and the max possible score)
-
-#             Output Format:
-#             For each skill:
-#             -*Skill*: [Skill Name]
-#             -*Total Score*: [Total score for the skill]
-#             -*Strengths*: [List the strengths]
-#             -*Areas of Improvement*: [List the improvement areas]
-
-#             Instructions:
-#             -Based on the comments and scores, identify strengths and areas of improvement for each skill.
-#             -DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES BEYOND THE OUTPUT FORMAT.
-#             """
-
-#         client = Groq(api_key=api_key)
-#         llm_response = client.chat.completions.create(
-#             model=model,
-#             messages=[{"role": "system", "content": prompt_for_skill_wise_assessment}]
-#         )
-#         logger.info("Skill-wise assessment completed successfully.")
-#         return llm_response.choices[0].message.content
-#     except Exception as e:
-#         logger.error(f"Failed to complete skill-wise assessment: {e}")
-#         raise
-
-# def end_assessment(result, soft_skills_identified, soft_skills_score, candidate_score, soft_skills_reasoning, api_key, model):
-#     try:
-#         prompt_for_overall_assessment = f"""
-#             Based on the following input, generate a detailed overall assessment that highlights the strengths and areas of improvement.
-
-#             Input:
-#                 1.Technical skills data: {result}
-#                     - this contains the skill, total score scored by interviewee in that skill, strengths and weaknesses of that skill
-#                 2.Soft Skills data:
-#                     soft skills identified: {soft_skills_identified}
-#                     soft skills score: {soft_skills_score}
-#                     soft skills reasoning: {soft_skills_reasoning}
-#                 3.Candidate total score for technical skills: {candidate_score}
-
-#             Consider the input data. Provide a concise and structured response with the following sections:
-#             - Overall Strengths: A summary of key strengths derived from the provided scores and reasoning.
-#             - Areas of Improvement: A summary of areas that require attention.
-#             - Suggestions: Provide actionable suggestions where possible for technical and soft skills.
-
-#             Output Format:
-#             *Strengths*:
-#             *Areas of Improvement*:
-
-#             Instructions:
-#             - Ensure the assessment is professional and easy to interpret.
-#             - DO NOT INCLUDE ADDITIONAL COMMENTARY OR NOTES BEYOND THE OUTPUT FORMAT.
-#             """
-
-#         client = Groq(api_key=api_key)
-#         llm_response = client.chat.completions.create(
-#             model=model,
-#             messages=[{"role": "system", "content": prompt_for_overall_assessment}]
-#         )
-#         logger.info("Overall assessment generated successfully.")
-#         return llm_response.choices[0].message.content
-#     except Exception as e:
-#         logger.error(f"Failed to generate overall assessment: {e}")
-#         raise
+    try:
+        recommendations_section = end_assessment_result.split("Recommendations:")[1].strip()
+    except IndexError:
+        recommendations_section = "No recommendations section found."
+    
+    logger.info("extracted overall assessment sections successfully.")
+    # Return the extracted sections
+    return strengths_section, areas_of_improvement_section, recommendations_section
