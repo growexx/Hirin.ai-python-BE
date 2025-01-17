@@ -1,7 +1,6 @@
 twilio
 pydub
 elevenlabs
-logging
 langchain_aws
 boto3
 aiobotocore
