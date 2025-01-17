@@ -17,9 +17,10 @@ async def send_message_to_sns_async(topic_arn, data, role):
             region_name=AWS_REGION
         ) as sns_client:
             sns_message = json.dumps(data)
+            sns_modified_message = sns_message.replace("\n", "")
             publish_params = {
                 'TopicArn': topic_arn,
-                'Message': sns_message,
+                'Message': sns_modified_message,
                 'Subject': f"Assessment Results for Role: {role}"
             }
 
