@@ -147,7 +147,7 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
         # Send the message to SNS
         await send_message_to_sns_async(
             topic_arn=sns_topic_arn,
-            data=sns_message,
+            data=output,
             role=role
         )
         logger.info("Assessment result sent to SNS successfully.")
