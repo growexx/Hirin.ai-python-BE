@@ -24,11 +24,11 @@ phases:
       - aws s3 cp s3://nodejsartifact/hirin-proctoring-python-dev/config/config.ini Proctoring/
       - ls 
       - cd  Proctoring
-      - echo Runnng sonar-scanner on `date`
-      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.2.0.1227-linux.zip
-      - unzip sonar-scanner-cli-3.2.0.1227-linux.zip
-      - echo $SONAR_HOST
-      - ./sonar-scanner-3.2.0.1227-linux/bin/sonar-scanner -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.projectKey=$projectKey -Dsonar.projectVersion=$projectVersion
+      #- echo Runnng sonar-scanner on `date`
+      #- wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.2.0.1227-linux.zip
+      #- unzip sonar-scanner-cli-3.2.0.1227-linux.zip
+      #- echo $SONAR_HOST
+      #- ./sonar-scanner-3.2.0.1227-linux/bin/sonar-scanner -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.projectKey=$projectKey -Dsonar.projectVersion=$projectVersion
   build:
     commands:
       - ls
