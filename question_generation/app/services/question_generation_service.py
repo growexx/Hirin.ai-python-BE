@@ -82,7 +82,7 @@ class QuestionGenerationService:
                 prompts.append(prompt)
 
             # Asynchronous API calls
-            tasks = [LLMClient.AsyncBedRockLLM(prompt, lmodel,region,max_tokens=4096) for prompt in prompts]
+            tasks = [LLMClient.AsyncBedRockLLM(prompt, lmodel, bdClient) for prompt in prompts]
             responses = await asyncio.gather(*tasks)
 
             # Validation and re-run logic
@@ -99,7 +99,7 @@ class QuestionGenerationService:
                     break
 
                 re_run_prompts = [prompts[i] for i in re_run_indices]
-                re_run_tasks = [LLMClient.AsyncBedRockLLM( prompt, lmodel,region,max_tokens=4096) for prompt in re_run_prompts]
+                re_run_tasks = [LLMClient.AsyncBedRockLLM( prompt, lmodel, bdClient) for prompt in re_run_prompts]
                 re_run_responses = await asyncio.gather(*re_run_tasks)
 
                 for idx, response in zip(re_run_indices, re_run_responses):
