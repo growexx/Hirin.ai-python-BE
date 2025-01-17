@@ -321,7 +321,8 @@ async def poll_queue():
             if messages:
                 for message in messages:
                     logger.info(f"Received message: {message['Body']}")
-                    message_dict = ast.literal_eval(message['Body'])
+                    message_dict_str = ast.literal_eval(message['Body'])['Message']
+                    message_dict = ast.literal_eval(message_dict_str)
                     phone_no = message_dict["mobileNumber"]
                     if validate_phone_no(phone_no=phone_no):
                         call = twilio_service.initiate_call(from_number=twilio_no,to_number=phone_no,websocket_url=websocket_url)
