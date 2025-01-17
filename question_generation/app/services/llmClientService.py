@@ -60,14 +60,14 @@ class LLMClient:
     
 
     @classmethod
-    async def AsyncBedRockLLM(cls, prompt, model,region):
+    async def AsyncBedRockLLM(cls, prompt, model,region,max_tokens):
         try:
         
             session = AioSession()
             async with session.create_client('bedrock-runtime', 
                 region_name = region) as client:
                 
-                request_body = json.dumps({"prompt": prompt})
+                request_body = json.dumps({"prompt": prompt,"max_gen_len":max_tokens})
                 response = await client.invoke_model(
                 modelId=model,
                 accept='application/json',

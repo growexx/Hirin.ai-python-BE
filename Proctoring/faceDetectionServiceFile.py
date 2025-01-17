@@ -121,7 +121,7 @@ class FaceDetectionService:
                 "numberOfFacesDetected": len(total_faces_detected),
                 "multipleFacesDetected": len(total_faces_detected) > 1,
                 "noFaceDetected": len(total_faces_detected) == 0,
-                "timePersonWasNotInFrame": f"{total_time_not_in_frame:.0f} seconds",
+                "timePersonWasNotInFrame": int(total_time_not_in_frame),
                 "personNotInFrameDetails": {
                     "timeNotInFrame": [
                         {"start": f"{int(start // 60)}:{int(start % 60):02d}", "end": f"{int(end // 60)}:{int(end % 60):02d}"}
@@ -141,7 +141,7 @@ class FaceDetectionService:
         tab_switch_count = api_data['tab_switch_count']
         tab_switch_time = api_data['tab_switch_time']
         time_not_in_frame_str = api_data['result']['timePersonWasNotInFrame']
-        time_not_in_frame = int(time_not_in_frame_str.split()[0])
+        time_not_in_frame = api_data['result']['timePersonWasNotInFrame']
         multiple_faces = api_data.get('multipleFacesDetected', False)
 
         P1 = 25 if exit_fullscreen else 0

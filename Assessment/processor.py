@@ -32,6 +32,7 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
 
         # Step 2: Generate unified assessment
         assessment_result = unified_assessment(metadata, role, job_description, questions_json, soft_skills, brt, model_id)
+        logger.info(f"assessment_result : {assessment_result}")
         
         # Check if assessment result is None
         if assessment_result is None:

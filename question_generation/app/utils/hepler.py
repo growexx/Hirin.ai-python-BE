@@ -8,6 +8,10 @@ import os
 class Helper:
 
     @classmethod
+    def remove_backticks(cls,input_string):
+        return input_string.strip('`')
+
+    @classmethod
     async def read_prompt(cls, file_name):
         try:
             async with aiofiles.open(file_name, 'r') as file:
