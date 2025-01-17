@@ -21,8 +21,7 @@ async def send_message_to_sns_async(topic_arn, data, role):
             sns_message = json.dumps(data)
             publish_params = {
                 'TopicArn': topic_arn,
-                'Message': sns_message,
-                'Subject': f"Assessment Results for Role: {role}"
+                'Message': sns_message
             }
             logger.debug(f"SNS message payload: {sns_message}")
             response = await sns_client.publish(**publish_params)
