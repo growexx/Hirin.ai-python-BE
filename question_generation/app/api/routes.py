@@ -29,24 +29,21 @@ except Exception as e:
 
 try:
     region = Config.get('BEDROCK','region')
-    API_KEYS = {
-        "OPENAI_API_KEY": Config.get('Openapi','api_key'),
-        "GROQ_API_KEY": Config.get('Groq','api_key')
-    }
+    # API_KEYS = {
+    #     "GROQ_API_KEY": Config.get('Groq','api_key')
+    # }
     Models = {
         "BEDROCK_MODEL": Config.get('BEDROCK','model'),
-        "OPENAI_MODLE": Config.get('Openapi','model'),
-        "GROQ_MODLE" : Config.get('Groq','lModel')
+        # "GROQ_MODLE" : Config.get('Groq','lModel')
     }
 except Exception as e:
     logger.error(f"Failed to load API keys: {e}")
     raise
 
 try:
-    openai_client = OpenAI(api_key=API_KEYS["OPENAI_API_KEY"])
-    groq_client = Groq(api_key=API_KEYS["GROQ_API_KEY"])
-    async_groq_client = AsyncGroq(api_key=API_KEYS["GROQ_API_KEY"])
-    
+    # groq_client = Groq(api_key=API_KEYS["GROQ_API_KEY"])
+    # async_groq_client = AsyncGroq(api_key=API_KEYS["GROQ_API_KEY"])
+
     bd_client = boto3.client("bedrock-runtime",
         region_name = region)
 
