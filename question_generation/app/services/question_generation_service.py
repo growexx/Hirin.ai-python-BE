@@ -11,7 +11,7 @@ class QuestionGenerationService:
     @classmethod
     async def questionGeneration(cls,bdClient, lmodel, jobDescription, jobDescriptionUrl, isText, skills, totalTime,region):
         try:
-            # Job description handling (Blocks 3 and 4)
+
             jd_summary_prompt_template = await Helper.read_prompt("app/static/job_summary_prompt.txt")
 
             if isText:
