@@ -65,20 +65,24 @@ class QuestionGenerationService:
             # Read the question generation prompt template
             question_prompt_template = await Helper.read_prompt("app/static/question_generation_prompt.txt")
 
+            total_skills = sum(len(chunk[0]) for chunk in chunks)
+            duration_per_skill = totalTime / total_skills if totalTime > 0 else "N/A"
+
             # Generate prompts dynamically
             prompts = []
             for chunk in chunks:
                 print("Current Chunk",chunk)
+                chunk_duration = duration_per_skill * len(chunk[0]) if totalTime > 0 else "N/A"
+
                 prompt = question_prompt_template.format(
                     SJD=jdSummary,
                     keySkills=chunk[0],
                     proficiencyLevel=chunk[2],
                     questionsPerSkill=chunk[1],
-                    interview_duration=totalTime if totalTime > 0 else "N/A",
+                    interview_duration=chunk_duration,
                     sumquestionsPerSkill=sum(chunk[1])
                 )
                 logger.info(chunk)
-                #logger.info(prompt)
                 prompts.append(prompt)
 
             # Asynchronous API calls
