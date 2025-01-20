@@ -108,8 +108,10 @@ class QuestionGenerationService:
             # Combine responses and save to file
             combined_responses = "\n".join(responses)
             if combined_responses:
+                logger.info(f"Combined Responses: {combined_responses}")
                 logger.info("All skills have the correct number of questions.")
                 questions_json = Helper.format_question_json(combined_responses)
+                logger.info(f"Questions JSON: {questions_json}")
 
                 if not questions_json:
                     logger.error("Failed to convert question into the json formate")
