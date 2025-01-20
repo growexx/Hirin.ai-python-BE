@@ -30,6 +30,7 @@ Instruction:
       - Must-have skills are prioritized over good-to-have skills and contributes significantly to the score.
       - Missing Must-have skills impacts the score more heavily.
       - If the degree is not explicitly mentioned, infer the highest qualification based on the provided educational details give score between 0 to 10.
+      - cv_score is sum of each section score 
 
 
 Output Format:
