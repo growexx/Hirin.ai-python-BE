@@ -1,4 +1,5 @@
 from app.utils.logger_config import logger
+from app.services.llmClientService import LLMClient
 import aiofiles
 import json
 import re
@@ -47,8 +48,6 @@ class Helper:
     def output_formatter(cls, inputstring, metadata):
 
         try:
-            print(f"metadata: {metadata}")
-            print(f"inputstring : {inputstring}")
             technical_skills = {
             "must_have_skills": {
                 "match": Helper.extract_list(r"must-have\s*match\s*skills:\n(.*?)\n\n", inputstring),
@@ -103,6 +102,59 @@ class Helper:
         except Exception as e:
             logger.error(f"Error occured while formating the output : {e}")
             return None
+
+    @classmethod
+    def validate_output(cls, output):
+        try:
+            data = json.loads(output)
+            required_keys = ["cv_score", "technical_skills_and_experience", "education", "soft_skills", "additional_factor"]
+            for key in required_keys:
+                if key not in data:
+                    return False
+            return True
+        except (json.JSONDecodeError, KeyError):
+            return False
+        
+    @classmethod
+    def json_output_formatter(cls, inputstring, jdSummary, metadata):
+        try:
+            if inputstring != '' and inputstring is not None:
+                json_data = json.loads(inputstring)
+                json_data["metadata"] = metadata
+                json_data["job_description_summary"] = jdSummary
+                json_data["event"] = "cvScreeningEnded"
+
+                return json.dumps(json_data, indent=4)
+            
+            return None
+        except Exception as e:
+            logger.error(f"Error occured while formating the output : {e}")
+            return None
+        
+    @classmethod
+    def get_response_with_retry(self,prompt,bd_client, bdModel, max_retries=3):
+        try:
+            for attempt in range(max_retries):
+                print(f"bd_client: {bd_client}")
+                print(f"prompt:{prompt}")
+                print(f"model: {bdModel}")
+                response = LLMClient.BedRockLLM(bd_client,prompt,bdModel)
+                print(response)
+                response = response.replace("```json\n", "").replace("\n```", "")
+
+                print(response)
+
+                if Helper.validate_output(response):
+                    return response
+                else:
+                    print(f"Attempt {attempt + 1} failed: Invalid format. Retrying...")
+                    prompt = f"The previous response was invalid. Please adhere strictly to the specified output format:\n {prompt}"
+
+            return None
+        except Exception as e:
+            logger.error(f"Uanble to generate valid response : {e}")
+            return None
+        
 
 
 

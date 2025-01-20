@@ -1,0 +1,36 @@
+{ "cv_score": [out of 100]
+  "technical_skills_and_experience": {
+          "must_have_skills": {
+              "match": [skills/technologies],
+              "unmatch": [skills/technologies]
+              },
+              ,
+          "good_to_have_skills": {
+              "match": [skills/technologies],
+              "unmatch": [skills/technologies]
+          },
+          "job_description_experience": [mentioned in JD years],
+          "resume_experience": [Relevant work experience in resume. Don't include education experience],
+          "score": [out of 60]
+  },
+  "education": {
+          "mentioned_jd": [mentioned in JD],
+          "mentioned_resume": [mentioned in resume],
+          "score": [out of 10]
+      },
+  "soft_skills": {
+          "must_have_skills": {
+              "match": [Skills],
+              "unmatch": [Skills]
+          },
+          "good_to_have_skills": {
+              "match": [Skills],
+              "unmatch": [Skills]
+          },
+          "score": [out of 20]
+      },
+  "additional_factor": {
+          "factor": [If candidate mentioned any extra certificate relelavant to Job description],
+          "score": [out of 10]
+      }
+}
