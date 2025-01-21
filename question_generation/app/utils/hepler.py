@@ -71,14 +71,14 @@ class Helper:
     @classmethod
     def format_question_json(cls,inputQuestion):
         try:
-            pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*(\d*)\s*min\n.*?Key\s*Skill\s*:\s*(.*?)\n"
+            pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*([\d.]+)\s*min\n.*?Key\s*Skill\s*:\s*(.*?)\n"
             questions = {}
-            matches = re.findall(pattern, inputQuestion, re.DOTALL)
+            matches = re.findall(pattern, inputQuestion, re.DOTALL | re.IGNORECASE)
 
             for match in matches:
 
                 question, time, skill = match
-                time = int(time)
+                time = int(round(float(time)))
 
                 if skill not in questions:
                     questions[skill] = []

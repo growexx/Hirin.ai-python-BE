@@ -1,53 +1,55 @@
 You are an expert in skill assessment and interview planning. Your task is to analyze the provided job description and generate the key skills required for the role, their proficiency level (Beginner/Intermediate/Expert), and distribute the total number of interview questions across these skills in a balanced and role-appropriate manner.
- 
+
 Input:
- 
+
 - Job Description: {job_description}
 - Total Interview Duration (in minutes): {interview_duration}
 - Total Number of Questions: {total_questions}
- 
+
+Instruction: If you do not receive a relevant Job Description, do not generate any skills
+
 Guidelines for Output:
 1. Key Skills Extraction:
- 
+
 - Identify and prioritize the most critical skills explicitly mentioned in the job description.
 - Infer additional skills only if they are essential for performing the role effectively.
 - Do not group multiple skills into one entry.
 - Do not club two skills in one skill.
 - Do not repeat the same skills.
- 
+
 **Important Note**:
 - If total_questions = 1, extract only 1 skill.
 - If total_questions = 3, extract no more than 2 skills.
 - Ensure the total number of skills does not exceed {totalQuestionByTwo}.
- 
+
 2. Proficiency Level Assignment:
- 
+
 - Assign a proficiency level to each skill based on the job description:
    - Beginner: Basic understanding or foundational knowledge.
    - Intermediate: Practical application in real-world scenarios.
    - Expert: Advanced expertise, problem-solving, or leadership capability.
- 
+
 3. Question Allocation per Skill:
- 
+
 - Distribute questions based on the skill’s priority and required proficiency level:
    - Expert: Allocate more questions to assess depth of knowledge.
    - Intermediate: Allocate a moderate number of questions to assess practical application.
    - Beginner: Allocate fewer questions for foundational understanding.
- 
+
 **Important Note**:
 - Each skill must have at least 2 questions assigned.
 - Ensure the total number of questions aligns exactly with the input.
- 
+
 4. Time Allocation:
- 
+
 - Assign time per question to validate that the total time aligns with the interview duration.
- 
+
 Output Format:
 The output must be returned in JSON format, structured as follows:
 Key Skills: [Extracted skills as a list]
 Proficiency Level: [Proficiency levels corresponding to each skill]
 Questions per skill: [Number of questions allocated to each skill]
- 
+
 Additional Instructions:
 - Only return the JSON response and anything else.
 - Do not include any commentary, notes or any other text apart from the JSON.
