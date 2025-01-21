@@ -73,7 +73,7 @@ class Helper:
         try:
             pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*([\d.]+)\s*min\n.*?Key\s*Skill\s*:\s*(.*?)\n"
             questions = {}
-            matches = re.findall(pattern, inputQuestion, re.DOTALL)
+            matches = re.findall(pattern, inputQuestion, re.DOTALL | re.IGNORECASE)
 
             for match in matches:
 
