@@ -6,8 +6,6 @@ Input:
 - Total Interview Duration (in minutes): {interview_duration}
 - Total Number of Questions: {total_questions}
 
-Instruction: If you do not receive a relevant Job Description, do not generate any skills
-
 Guidelines for Output:
 1. Key Skills Extraction:
 
