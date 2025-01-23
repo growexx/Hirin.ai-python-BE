@@ -4,12 +4,15 @@ import json
 import configparser
 from processor import process_data
 from logger.logger_config import logger
+import time
 
 # Load configuration from config.ini
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 AWS_REGION = config['aws']['region']
+AWS_ACCESS_KEY_ID = config['aws']['access_key_id']
+AWS_SECRET_ACCESS_KEY = config['aws']['secret_access_key']
 queue_url = config['sqs']['queue_url']
 sns_topic_arn = config['sns']['topic_arn']
 
@@ -17,7 +20,9 @@ sns_topic_arn = config['sns']['topic_arn']
 try:
     sqs = boto3.client(
         'sqs',
-        region_name=AWS_REGION
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
     )
     logger.info("Successfully initialized SQS client.")
 
@@ -28,7 +33,9 @@ except Exception as e:
 try:
     brt = boto3.client(
         "bedrock-runtime",
-        region_name=AWS_REGION)
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     
     # Set the model ID, e.g., Amazon Titan Text G1 - Express.
     model_id = "meta.llama3-3-70b-instruct-v1:0"
@@ -39,6 +46,7 @@ except Exception as e:
 
 async def main():
     try:
+        st = time.time()
         # Fetch messages from SQS
         logger.info("Attempting to receive messages from SQS.")
         response = sqs.receive_message(
@@ -57,26 +65,47 @@ async def main():
 
                     # Process the assessments using processor.py
                     success = await process_data(assessments, sns_topic_arn, brt, model_id)
-                    
+                    logger.info(f"success :: {success}")
                     if success:
                         logger.info(f"Successfully processed: {message['MessageId']}")
-                        # Delete the message from SQS after processing
+                        try:
+                            qs = boto3.client(
+                                'sqs',
+                                region_name=AWS_REGION,
+                                aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+                            )
+                            qs.delete_message(
+                                QueueUrl=queue_url,
+                                ReceiptHandle=message['ReceiptHandle']
+                            )
+                            logger.info("Successfully Message Deleted.")
+
+                        except Exception as e:
+                            logger.error(f"Failed to initialize SQS client: {e}")
+                            raise
+                     
                     else:
                         logger.warning(f"Failed to process message ID: {message['MessageId']}")
-
-                    sqs.delete_message(
-                        QueueUrl=queue_url,
-                        ReceiptHandle=message['ReceiptHandle']
-                    )
-                    logger.info(f"deleted message ID: {message['MessageId']}")
                     
                 except json.JSONDecodeError as je:
                     logger.error(f"JSON decoding error for message ID {message['MessageId']}: {je}")
                 except Exception as e:
                     logger.error(f"Error processing message ID {message['MessageId']}: {e}")
+
+            et = time.time()
+            totalTime = et-st
+            logger.info(f"time taken :: {totalTime}")
+
         else:
+            et = time.time()
+            totalTime = et-st
+            logger.info(f"time taken :: {totalTime}")
             logger.info("No messages available in the SQS queue.")
 
+        et = time.time()
+        totalTime = et-st
+        logger.info(f"time taken :: {totalTime}")
     except Exception as e:
         logger.error(f"Failed to read messages from SQS: {e}")
 

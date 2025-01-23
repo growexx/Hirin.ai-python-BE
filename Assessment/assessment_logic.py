@@ -283,7 +283,7 @@ def parse_assessment_result(data):
         )
 
     except Exception as e:
-        print(f"Failed to parse assessment result: {e}")
+        logger.error(f"Failed to parse assessment result: {e}")
         return None, None, None, None, None, None, None, None, None, None, None, None
 
 
@@ -466,7 +466,7 @@ def extractAssessmentSections(endAssessmentResult):
         overallRecommendationsSection = endAssessmentResult.get("overallRecommendations", [])
 
     except Exception as e:
-        print(f"ERROR: Unable to extract assessment sections. Reason: {e}")
+        logger.error(f"ERROR: Unable to extract assessment sections. Reason: {e}")
         return None
 
     # Return the extracted sections
