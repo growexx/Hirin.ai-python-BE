@@ -40,55 +40,92 @@ class FaceDetectionService:
             logger.error(f"Error extracting frames: {e}")
             raise
 
-    def count_and_track_people(self, fps=30, distance_threshold=0.9):
-        try:
-            logger.info("Starting people detection and tracking.")
-            embedder = FaceNet()
-            unknown_mapping = {}
-            unknown_counter = 1
-            output = []
+    def count_and_track_people(self, fps=30, distance_threshold=0.9, max_retries=3):
+        retry_count = 0
+        while retry_count < max_retries:
+            try:
+                logger.info(f"Starting people detection and tracking. Retry attempt: {retry_count + 1}")
+                embedder = FaceNet()
+                unknown_mapping = {}
+                unknown_counter = 1
+                output = []
 
-            for frame_file in sorted(os.listdir(self.frames_dir)):
-                frame_path = os.path.join(self.frames_dir, frame_file)
-                frame = cv2.imread(frame_path)
-                if frame is None:
-                    logger.warning(f"Frame {frame_file} could not be read. Skipping...")
-                    continue
+                invalid_frames = []
 
-                faces = RetinaFace.extract_faces(frame, align=True)
-                timestamp = int(frame_file.split("_")[1].split(".")[0]) / fps
+                for frame_file in sorted(os.listdir(self.frames_dir)):
+                    frame_path = os.path.join(self.frames_dir, frame_file)
+                    frame = cv2.imread(frame_path)
 
-                detected_faces = []
-                for face in faces:
-                    face_embedding = embedder.embeddings([face])[0]
-                    min_distance = float("inf")
-                    best_match = None
+                    if frame is None or frame.size == 0:
+                        logger.warning(f"Invalid or empty frame: {frame_path}. Marking for removal.")
+                        invalid_frames.append(frame_file)
+                        continue
 
-                    for unk_label, unk_embedding in unknown_mapping.items():
-                        if face_embedding.shape == unk_embedding.shape:
-                            distance = np.linalg.norm(face_embedding - unk_embedding)
-                            if distance < min_distance:
-                                min_distance = distance
-                                best_match = unk_label
+                    faces = RetinaFace.extract_faces(frame, align=True)
+                    if not faces:
+                        logger.warning(f"No faces detected in frame {frame_file}. Marking for removal.")
+                        invalid_frames.append(frame_file)
+                        continue
 
-                    if min_distance < distance_threshold:
-                        detected_faces.append(best_match)
-                    else:
-                        unknown_label = f"unknown-{unknown_counter}"
-                        unknown_mapping[unknown_label] = face_embedding
-                        detected_faces.append(unknown_label)
-                        unknown_counter += 1
+                    timestamp = int(frame_file.split("_")[1].split(".")[0]) / fps
 
-                output.append({"timestamp": timestamp, "faces": detected_faces})
+                    detected_faces = []
+                    for face in faces:
+                        if face is None or face.size == 0:
+                            logger.warning("Invalid face detected, skipping...")
+                            continue
 
-            with open(self.output_file, "w") as f:
-                for entry in output:
-                    f.write(str(entry) + "\n")
+                        try:
+                            face_embedding = embedder.embeddings([face])[0]
+                        except Exception as e:
+                            logger.error(f"Error generating embeddings for a face: {e}. Skipping...")
+                            continue
 
-            logger.info(f"People tracking results saved to {self.output_file}.")
-        except Exception as e:
-            logger.error(f"Error in people detection and tracking: {e}")
-            raise
+                        min_distance = float("inf")
+                        best_match = None
+
+                        for unk_label, unk_embedding in unknown_mapping.items():
+                            if face_embedding.shape == unk_embedding.shape:
+                                distance = np.linalg.norm(face_embedding - unk_embedding)
+                                if distance < min_distance:
+                                    min_distance = distance
+                                    best_match = unk_label
+
+                        if min_distance < distance_threshold:
+                            detected_faces.append(best_match)
+                        else:
+                            unknown_label = f"unknown-{unknown_counter}"
+                            unknown_mapping[unknown_label] = face_embedding
+                            detected_faces.append(unknown_label)
+                            unknown_counter += 1
+
+                    output.append({"timestamp": timestamp, "faces": detected_faces})
+
+                with open(self.output_file, "w") as f:
+                    for entry in output:
+                        f.write(str(entry) + "\n")
+
+                logger.info(f"People tracking results saved to {self.output_file}.")
+                
+                # Break out of the retry loop on success
+                break
+
+            except Exception as e:
+                logger.error(f"Error in people detection and tracking: {e}. Retrying...")
+                retry_count += 1
+
+                # Remove invalid frames before retrying
+                for invalid_frame in invalid_frames:
+                    invalid_frame_path = os.path.join(self.frames_dir, invalid_frame)
+                    if os.path.exists(invalid_frame_path):
+                        os.remove(invalid_frame_path)
+                        logger.info(f"Removed invalid frame: {invalid_frame_path}")
+
+                invalid_frames.clear()  # Reset for the next retry
+
+                if retry_count == max_retries:
+                    logger.critical(f"Max retries reached. Aborting...")
+                    raise
 
     def format_output(self):
         try:
@@ -188,7 +225,7 @@ class FaceDetectionService:
         try:
             logger.info(f"Starting video processing for metadata: {metadata}")
             self.extract_audio_frames(video_path)
-            self.count_and_track_people()
+            self.count_and_track_people()  # Updated method with retries
             formatted_output = self.format_output()
             logger.info(f"Processing completed for video: {video_path}")
             return formatted_output
@@ -196,7 +233,6 @@ class FaceDetectionService:
             logger.error(f"Error processing video: {e}")
             raise
         finally:
-            # Ensure cleanup is always called, whether or not an error occurred
             self.cleanup()
 
     def cleanup(self):

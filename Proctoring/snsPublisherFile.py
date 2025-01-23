@@ -9,7 +9,6 @@ config.read('config.ini')
 
 AWS_REGION = config['aws']['region']
 
-
 async def send_message_to_sns_async(topic_arn, data, role):
     try:
         logger.info(f"Preparing to send message to SNS. Topic ARN: {topic_arn}, Role: {role}")
