@@ -21,6 +21,9 @@ RUN useradd -M -d /app appuser && chown -R appuser:appuser /app
 # Switch to the non-root user
 USER appuser
 
+ENV PATH=/usr/local/cuda-11.2/bin${PATH:+:${PATH}}
+ENV LD_LIBRARY_PATH=/usr/local/cuda-11.2/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+
 # Expose the application port
 #EXPOSE 5009
 
