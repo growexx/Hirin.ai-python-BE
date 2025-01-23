@@ -10,19 +10,21 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 AWS_REGION = config['aws']['region']
-api_key = config['api']['api_key']
-model = config['api']['model']
+AWS_ACCESS_KEY_ID = config['aws']['access_key_id']
+AWS_SECRET_ACCESS_KEY = config['aws']['secret_access_key']
 queue_url = config['sqs']['queue_url']
 sns_topic_arn = config['sns']['topic_arn']
 
-
-# Initialize SQS client
+# Initialize SQS client with credentials
 try:
     sqs = boto3.client(
         'sqs',
-        region_name=AWS_REGION
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
     )
     logger.info("Successfully initialized SQS client.")
+
 except Exception as e:
     logger.error(f"Failed to initialize SQS client: {e}")
     raise
@@ -30,7 +32,9 @@ except Exception as e:
 try:
     brt = boto3.client(
         "bedrock-runtime",
-        region_name=AWS_REGION)
+        region_name=AWS_REGION,
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
     
     # Set the model ID, e.g., Amazon Titan Text G1 - Express.
     model_id = "meta.llama3-3-70b-instruct-v1:0"
@@ -59,7 +63,7 @@ async def main():
 
                     # Process the assessments using processor.py
                     success = await process_data(assessments, sns_topic_arn, brt, model_id)
-
+                    
                     if success:
                         logger.info(f"Successfully processed: {message['MessageId']}")
                         # Delete the message from SQS after processing
