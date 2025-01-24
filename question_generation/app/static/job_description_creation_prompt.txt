@@ -1,7 +1,7 @@
 You are an expert job description writer. Based on the following 2-3 lines about a job, create a comprehensive and detailed job description.
 
 Input:
-Job Summary: {job_summary}
+Job Summary: {input_text}
 
 Output:
 **Role:** [As per Job Summary]
@@ -16,6 +16,7 @@ Output:
 ### Nice-to-Have Skills: List any additional skills, technologies, certifications, or experiences that would add value but are not mandatory. Distinguish them from the required skills.
 
 Guidelines:
-- Format the output professionally with clean structure in *MarkDown* language and logical flow. 
-- Tailor the tone to match the job's industry and target audience. 
+- Format the output professionally with clean structure in *MarkDown* language and logical flow.
+- Tailor the tone to match the job's industry and target audience.
 - Ensure clarity, relevance, and precision in all sections.
+- OUTPUT FORMAT MUST BE FOLLOWED.
