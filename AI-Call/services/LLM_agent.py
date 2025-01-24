@@ -1,23 +1,17 @@
 import boto3
-import configparser
-
-
-# Load configuration
-config = configparser.ConfigParser()
-config.read('config.ini')
-
 
 
 class LanguageModelProcessor:
-    def __init__(self):
-        # Initialize Bedrock LLM
+    def __init__(self,config_loader):
+
         self.llm = boto3.client(
-            "bedrock-runtime"
+            "bedrock-runtime",
         )
-        self.model_id = "meta.llama3-3-70b-instruct-v1:0"
+        self.model_id = config_loader.get("llm",'model_id')
 
         with open('system_prompt.txt', 'r') as file:
             system_prompt = file.read().strip()
+        
         self.messages = [{"role":"user","content":[{"text":system_prompt}]}]
 
     def process(self, text: str) -> str:
@@ -29,4 +23,3 @@ class LanguageModelProcessor:
         response_text = response["output"]["message"]["content"][0]["text"]
         self.messages[0]["content"][0]["text"]+=f"role :agent ,content:{response_text}\n"
         return response_text
-
