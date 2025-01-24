@@ -35,13 +35,6 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
             return False
         
         output_format_for_question_wise = question_wise_output_format()
-        logger.info("--------------------------------------------------------------------------------------------------------------")
-        logger.info(f"metadata_before_unified :: {metadata}")
-        logger.info(f"Processing role: {role}")
-        logger.info(f"Job description for {role}: {job_description}")
-        logger.info(f"Loaded questions in JSON format: {questions_json}")
-        logger.info(f"Soft skills required for the role: {soft_skills}")
-        logger.info(f"Output format for questions: {output_format_for_question_wise}")
 
         # Step 2: Generate unified assessment
         question_wise_assessment = unified_assessment(metadata, role, job_description, questions_json, soft_skills, output_format_for_question_wise, brt, model_id)
@@ -102,18 +95,10 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
 
         technical_skill_strengths, technical_skill_areas_of_improvement, technical_skill_recommendations = extractTechnicalAssessment(technical_result)
 
-        # logger.info(f"Technical Skill Strengths: {technical_skill_strengths}")
-        # logger.info(f"Areas of Improvement: {technical_skill_areas_of_improvement}")
-        # logger.info(f"Recommendations: {technical_skill_recommendations}")
-
         output_format_for_overall_LLM = overall_output_format()
         # Step 7: Generate overall assessment
         overall_assessment_result = end_assessment(technical_result, soft_skills_data, total_technical_score, possible_technical_score, output_format_for_overall_LLM, brt, model_id)
 
-        # overall_assessment_result = clean_triple_backticks(output_format_for_overall_LLM)
-        
-        # logger.info("overall_assessment_result:: ",overall_assessment_result)
-        # Check if overall assessment result is None
         if overall_assessment_result is None:
             logger.error("Failed to generate overall assessment.")
             return False
@@ -149,7 +134,7 @@ async def process_data(assessments, sns_topic_arn, brt, model_id):
                 "technicalAreasOfImprovement": technical_skill_areas_of_improvement,
                 "technicalRecommendations": technical_skill_recommendations
             },
-            "OVERALL_ASSESSMENT": {
+            "overallAssessment": {
                 "overallStrengths": overallStrengthsSection,
                 "overallAreasOfImprovement": overallAreasOfImprovementSection,
                 "overallRecommendations": overallRecommendationsSection
