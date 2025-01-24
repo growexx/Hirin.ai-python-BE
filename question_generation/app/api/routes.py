@@ -8,9 +8,10 @@ from app.logger_config import logger, listener
 from app.services.job_description_creation_service import JobDescriptionCreationService
 from app.services.question_skill_level_creation_service import QuestionSkillLevelCreationService
 from app.services.question_generation_service import QuestionGenerationService
+from app.services.question_generation_service_zena import QuestionGenerationServiceZena
 from app.dto.job_desription_creation_dto import JobDescriptionInputDTO,JobDescriptionOutputDTO
 from app.dto.question_skill_creation_dto import QuestionSkillCreationInputDTO,QuestionSkillCreationOutputDTO
-from app.dto.question_generation_dto import QuestionGenerationInputDTO
+from app.dto.question_generation_dto import QuestionGenerationInputDTO, SingleSkillQuestionGenerationInputDTO
 from app.dto.job_summary_dto import JobSummaryRequestDTO, JobSummaryResponseDTO
 from app.services.job_summary_service import JobSummaryCreationService
 from groq import AsyncGroq
@@ -69,19 +70,32 @@ def verify_password(username, password):
 
 async def job_description_creation():
      try:
-          job_summary = JobDescriptionInputDTO(**request.get_json())
+          job_title, job_summary = JobDescriptionInputDTO(**request.get_json())
           if not job_summary:
             return jsonify({
                 "status": "error",
                 "message": "Please provide the missing field."
             }), 400
 
-          job_description = await JobDescriptionCreationService.createJobDescription(bd_client,Models['BEDROCK_MODEL'],job_summary)
-          response = JobDescriptionOutputDTO(
-            status="success",
-            job_description=job_description
-        )
-          return jsonify(response.model_dump()), 200
+          job_description = await JobDescriptionCreationService.createJobDescription(bd_client,Models['BEDROCK_MODEL'],job_title, job_summary)
+          if job_description.strip().lower() == "not valid":
+            return {
+                "status": 0,
+                "message": "Please provide a relevant Job Summary",
+                "data": job_description
+            }, 400
+          elif job_description.strip().lower() == "irrelevant":
+            return {
+                "status": 0,
+                "message": "Please provide a relevant Job Summary",
+                "data": job_description
+            }, 400
+          else:
+            return {
+                    "status": 1,
+                    "message": "Job Description successfully generated",
+                    "data": job_description
+                }, 200
 
      except Exception as e:
           return jsonify({
@@ -101,15 +115,16 @@ async def skills_no_questions_creation():
                 "message": "Please provide the missing field."
             }), 400
 
-        questionSkillLevel = await QuestionSkillLevelCreationService.questionskillcreation(bd_client,Models['BEDROCK_MODEL'],data.job_description,data.total_questions,data.interview_duration,data.job_description_type)
-        response = QuestionSkillCreationOutputDTO(
-        status="success",
-        key_skills=questionSkillLevel['keySkills'],
-        proficiency_level=questionSkillLevel['proficiencyLevel'],
-        questions_per_skill=questionSkillLevel['questionsPerSkill'],
-        message="Data successfully processed.")
+        questionSkillLevel = await QuestionSkillLevelCreationService.questionskillcreation(bd_client,Models['BEDROCK_MODEL'],data.job_description,data.total_questions,data.interview_duration,data.job_title,data.job_description_type)
 
-        return jsonify(response.model_dump()), 200
+        if 'status' in questionSkillLevel and questionSkillLevel['status'] == 0:
+            return jsonify(questionSkillLevel), 400
+        else:
+            return {
+                "status": 1,
+                "message": f"Skills successfully Generated",
+                "data": questionSkillLevel
+            }, 200
 
     except Exception as e:
         return jsonify({
@@ -130,6 +145,33 @@ async def question_generation():
             }), 400
 
         questions = await QuestionGenerationService.questionGeneration(bd_client, Models['BEDROCK_MODEL'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time,region)
+
+        return jsonify({
+            "status": "success",
+            "message": "question generated successfully...",
+            "question":questions
+
+        }), 200
+
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"An error occurred: {str(e)}"
+        }), 500
+
+@api_blueprint.route('/question-generation-zena', methods = ['POST'])
+@auth.login_required
+async def question_generation_zena():
+    try:
+        data = SingleSkillQuestionGenerationInputDTO(**request.json)
+        if not data:
+             return jsonify({
+                "status": "error",
+                "message": "Please provide the missing field."
+            }), 400
+
+        questions = await QuestionGenerationServiceZena.questionGenerationZena(bd_client, Models['BEDROCK_MODEL'],data.job_description,data.job_description_url,data.is_text,data.skills,data.total_time,data.previous_questions,region)
 
         return jsonify({
             "status": "success",

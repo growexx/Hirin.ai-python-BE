@@ -4,6 +4,7 @@ from typing import List
 
 
 class QuestionSkillCreationInputDTO(BaseModel):
+    job_title: str
     job_description : str
     total_questions : int
     interview_duration: int

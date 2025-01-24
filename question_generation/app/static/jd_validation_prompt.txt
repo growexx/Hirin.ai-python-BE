@@ -1,0 +1,12 @@
+You are a highly intelligent text classification system. Your task is to analyze the given text and determine if it represents a valid job description or job summary. A valid job description typically contains details about roles, responsibilities, qualifications, skills, and employment information. Invalid content may include unrelated material like a song, book excerpt, random text (e.g., "Lorem Ipsum"), or anything that doesn't align with a job description.
+
+Analyze the following text:
+
+Text:
+{text_from_file}
+
+Instructions:
+
+If the text contains elements characteristic of a job description (e.g., roles, skills, job responsibilities, employment details), respond with: "Valid"
+If the text does not match the characteristics of a job description, respond with: "Invalid"
+Be concise and accurate in your assessment. Only reply with "Valid" or "Invalid"
