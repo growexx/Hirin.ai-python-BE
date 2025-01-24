@@ -182,22 +182,12 @@ def unified_assessment(metadata, role, job_description, questions_json, soft_ski
             - BE STRICT AND UNBIASED IN YOUR EVALUATION.
         """
 
-        # logger.info("-------------------------------------------------------------------------------------------------")
-
-        # logger.info(f"brt:: {brt}")
-        # logger.info(f"model_id::{model_id}")
-        # logger.info(f"prompt_for_assessment:: {prompt_for_assessment}")
-
         conversation = [
             {
                 "role": "user",
                 "content": [{"text": prompt_for_assessment}],
             }
         ]
-
-        # logger.info("-------------------------------------------------------------------------------------------------")
-        # logger.info(f"conversation:: {conversation}")
-        
 
         # Send the message to the model
         response = brt.converse(
@@ -283,7 +273,7 @@ def parse_assessment_result(data):
         )
 
     except Exception as e:
-        print(f"Failed to parse assessment result: {e}")
+        logger.error(f"Failed to parse assessment result: {e}")
         return None, None, None, None, None, None, None, None, None, None, None, None
 
 
@@ -466,7 +456,7 @@ def extractAssessmentSections(endAssessmentResult):
         overallRecommendationsSection = endAssessmentResult.get("overallRecommendations", [])
 
     except Exception as e:
-        print(f"ERROR: Unable to extract assessment sections. Reason: {e}")
+        logger.error(f"ERROR: Unable to extract assessment sections. Reason: {e}")
         return None
 
     # Return the extracted sections

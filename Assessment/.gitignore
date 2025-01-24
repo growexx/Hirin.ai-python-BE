@@ -1,0 +1,8 @@
+venv*
+venv/*
+config.ini
+config*
+*ini*
+logs
+logs/*
+__*
