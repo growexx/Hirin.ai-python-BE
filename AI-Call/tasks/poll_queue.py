@@ -79,4 +79,4 @@ async def poll_queue(configloader,shared_data,queue_messages,dup_set):
                 logger.error(f"Error in Poll queue {e}")
             
             finally:
-                await asyncio.sleep(30)
+                await asyncio.sleep(10)

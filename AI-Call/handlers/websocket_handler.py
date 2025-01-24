@@ -305,7 +305,7 @@ async def websocket_handler(client_ws,configloader,shared_data,call_status_mappi
 
                     elapsed_time = time.time() - interaction_time
 
-                    if elapsed_time > 1.8 and accumilated_text.strip() :
+                    if elapsed_time > 1.6 and accumilated_text.strip() :
                         logger.info(f"Candidate said:{accumilated_text}.  at time {elapsed_time}")
 
                         # Measure time for LLM processing
