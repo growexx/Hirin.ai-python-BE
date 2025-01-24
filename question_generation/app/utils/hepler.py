@@ -3,7 +3,7 @@ import aiofiles
 import json
 import re
 import os
-
+from app.services.llmClientService import LLMClient
 
 class Helper:
 
@@ -141,7 +141,18 @@ class Helper:
         else:
             logger.info(f"File {file_path} does not exist.")
 
+    @classmethod
+    def check_list_sizes(cls, data):
+        list_lengths = [len(value) for value in data.values() if isinstance(value, list)]
+        logger.info(f"List Lenghts: {list_lengths}")
+        return len(set(list_lengths)) == 1
 
+    @classmethod
+    def validate_job_description_llm(cls, client, Bdmodel, prompt):
 
+        validation_result = LLMClient.BedRockLLM(client, prompt, Bdmodel)
 
-
+        if validation_result == "Valid":
+            return "Valid", None
+        else:
+            return "Invalid","Irrelevant Job Description Content"
