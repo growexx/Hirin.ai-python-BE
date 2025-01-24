@@ -15,7 +15,7 @@ websocket_url = config.get('twilio', 'WEBSOCKET_URL')
 websocket_url = "wss://" + websocket_url
 
 class TwilioService:
-    def __init__(self):
+    def __init__(self, account_sid: str, auth_token: str):
         self.client = Client(account_sid, auth_token)
  
     def initiate_call(self, to_number: str, from_number: str, websocket_url: str):

@@ -1,0 +1,211 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Proctoring API with Basic Authentication",
+    "description": "Proctoring API with Basic Authentication",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/submit-data": {
+      "post": {
+        "summary": "Submit Data for Video Processing",
+        "operationId": "submitData",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Payload containing metadata, questions, and user interaction data",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "metadata": {
+                    "type": "object",
+                    "properties": {
+                      "exam_id": {
+                        "type": "string",
+                        "description": "Unique ID of the exam"
+                      },
+                      "user_id": {
+                        "type": "string",
+                        "description": "Unique ID of the user"
+                      },
+                      "candidate_id": {
+                        "type": "string",
+                        "description": "ID of the candidate"
+                      }
+                    },
+                    "required": ["candidate_id"]
+                  },
+                  "questions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "user_video_url": {
+                          "type": "string",
+                          "description": "URL of the user's video"
+                        }
+                      },
+                      "required": ["user_video_url"]
+                    }
+                  },
+                  "tab_switch_count": {
+                    "type": "integer",
+                    "description": "Count of tab switches during the session"
+                  },
+                  "tab_switch_timestamps": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "Timestamps when tab switches occurred"
+                    }
+                  },
+                  "tab_switch_time": {
+                    "type": "integer",
+                    "description": "Total time spent on tab switches in seconds"
+                  },
+                  "exit_full_screen": {
+                    "type": "boolean",
+                    "description": "Whether the user exited full screen during the session"
+                  },
+                  "role": {
+                    "type": "string",
+                    "description": "Role of the user"
+                  },
+                  "summarized_JD": {
+                    "type": "string",
+                    "description": "Summarized job description"
+                  }
+                },
+                "required": [
+                  "metadata", 
+                  "questions", 
+                  "tab_switch_count", 
+                  "exit_full_screen"
+                ]
+              },
+              "example": {
+                "metadata": {
+                  "exam_id": "12345",
+                  "user_id": "67890",
+                  "candidate_id": "candidate123"
+                },
+                "questions": [
+                  {
+                    "user_video_url": "http://example.com/video1.mp4"
+                  },
+                  {
+                    "user_video_url": "http://example.com/video2.mp4"
+                  }
+                ],
+                "tab_switch_count": 3,
+                "tab_switch_timestamps": ["00:01:15", "00:02:45", "00:03:30"],
+                "tab_switch_time": 45,
+                "exit_full_screen": true,
+                "role": "student",
+                "summarized_JD": "This is a summarized job description."
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Processing started",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Processing started",
+                  "metadata": {
+                    "exam_id": "12345",
+                    "user_id": "67890",
+                    "candidate_id": "candidate123"
+                  },
+                  "task_ids": [
+                    "uuid-task-id-1",
+                    "uuid-task-id-2"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or invalid fields",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Missing required fields: ['metadata']"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/task-status/{task_id}": {
+      "get": {
+        "summary": "Check Task Status",
+        "operationId": "getTaskStatus",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the task",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task Status",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "completed",
+                  "result": {
+                    "candidate_id": "candidate123",
+                    "tab_switch_count": 3,
+                    "tab_switch_timestamps": ["00:01:15", "00:02:45", "00:03:30"],
+                    "tab_switch_time": 45,
+                    "exit_full_screen": true,
+                    "summary": "Success",
+                    "details": "Video processed successfully."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Task ID not found"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  }
+}

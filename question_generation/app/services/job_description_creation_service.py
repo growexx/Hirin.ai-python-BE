@@ -4,32 +4,24 @@ from app.services.llmClientService import LLMClient
 import asyncio
 
 class JobDescriptionCreationService:
-
-
+    
+    
     @classmethod
-    async def createJobDescription(cls,client, bdmodel, job_title, jobSummary):
+    async def createJobDescription(cls,groq_client, lmodel, jobSummary):
         try:
-
-            v_prompt_template = await Helper.read_prompt("app/static/job_description_summary_validation_prompt.txt")
-            v_prompt = v_prompt_template.format(input_text=jobSummary,input_title=job_title)
-            check = LLMClient.BedRockLLM(client, v_prompt, bdmodel)
-            if check.strip().lower() == "not valid":
-                return check
-            elif check.strip().lower() == "irrelevant":
-                return check
-            else:
-
-                prompt_template = await Helper.read_prompt("app/static/job_description_creation_prompt.txt")
-                prompt = prompt_template.format(input_text=jobSummary)
-                job_description = LLMClient.BedRockLLM(client, prompt, bdmodel)
-
-                if not job_description:
-                    logger.info("Error: No job description generated.")
-                    return None
-                else:
-                    return job_description
+            prompt_template = await Helper.read_prompt("app/static/job_description_creation_prompt.txt")
+            prompt = prompt_template.format(job_summary=jobSummary)
+        
+            job_description = LLMClient.GroqLLM(groq_client, prompt, lmodel)
+            
+            if not job_description:
+                logger.info("Error: No job description generated.")
+                return None
+            
+            return job_description
 
         except Exception as e:
             logger.error(f"Failed to generate Job description: {str(e)}")
             return None
 
+    

@@ -47,7 +47,7 @@ LOGGING_CONFIG = {
         }
     },
     "root": {
-        "level": "INFO",
+        "level": "DEBUG",
         "handlers": ["queue"]
     }
 }
