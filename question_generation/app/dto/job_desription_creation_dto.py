@@ -6,7 +6,6 @@ class UserLoginDTO(BaseModel):
     password: str = Field(..., description="Password of the user", min_length=8)
 
 class JobDescriptionInputDTO(BaseModel):
-    job_title: str
     job_summary: str
 
 class JobDescriptionOutputDTO(BaseModel):

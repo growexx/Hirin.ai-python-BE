@@ -7,7 +7,6 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-
 async def sns_publisher(sns_client,sns_topic_arn,message):
     message_payload = {
         "message": message,
@@ -30,8 +29,8 @@ class DeepgramService:
         self.ws = await websockets.connect(
             self.deepgram_url,
             extra_headers=headers,
-            ping_interval=10,  # Send a ping every 20 seconds      
-            ping_timeout=5 # Wait 10 seconds for a pong response
+            ping_interval=20,  # Send a ping every 20 seconds      
+            ping_timeout=10 # Wait 10 seconds for a pong response
         )
         return self.ws  # Return the WebSocket connection
 

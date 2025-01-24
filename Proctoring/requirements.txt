@@ -37,5 +37,3 @@ retina-face==0.0.17
 # tensorflow==2.9
 tf-keras==2.18.0
 scipy==1.14.1
-aioboto3==13.3.0
-boto3==1.35.81

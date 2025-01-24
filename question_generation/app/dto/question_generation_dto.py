@@ -24,15 +24,3 @@ class QuestionGenerationOutputDTO(BaseModel):
     questions: Dict[str, List[Question]]
     message: str
     status: str
-
-class PreviousQuestion(BaseModel):
-    question: str
-    time: int
-
-class SingleSkillQuestionGenerationInputDTO(BaseModel):
-    job_description: str
-    job_description_url: str
-    is_text: bool
-    skills: List[Skill]
-    total_time: int
-    previous_questions: List[PreviousQuestion]
