@@ -12,8 +12,8 @@ class QuestionSkillCreationInputDTO(BaseModel):
 
 class QuestionSkillCreationOutputDTO(BaseModel):
     status : str
-    key_skills: List[str]
-    proficiency_level: List[str]
-    questions_per_skill: List[int]
+    keySkills: List[str]
+    proficiencyLevel: List[str]
+    questionsPerSkill: List[int]
     message: str = None
 
