@@ -62,6 +62,7 @@ class QuestionGenerationServiceZena:
                 logger.info("Inconsistent list lengths in the response.")
                 return None
 
+            # Read the question generation prompt template
             question_prompt_template = await Helper.read_prompt("app/static/question_generation_prompt_zena.txt")
 
             prompt = question_prompt_template.format(

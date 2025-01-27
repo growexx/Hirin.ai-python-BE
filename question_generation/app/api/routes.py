@@ -83,13 +83,13 @@ async def job_description_creation():
                 "status": 0,
                 "message": "Please provide a relevant Job Summary",
                 "data": job_description
-            }, 400
+            }, 200
           elif job_description.strip().lower() == "irrelevant":
             return {
                 "status": 0,
                 "message": "Please provide a relevant Job Summary",
                 "data": job_description
-            }, 400
+            }, 200
           else:
             return {
                     "status": 1,
@@ -118,7 +118,7 @@ async def skills_no_questions_creation():
         questionSkillLevel = await QuestionSkillLevelCreationService.questionskillcreation(bd_client,Models['BEDROCK_MODEL'],data.job_description,data.total_questions,data.interview_duration,data.job_title,data.job_description_type)
 
         if 'status' in questionSkillLevel and questionSkillLevel['status'] == 0:
-            return jsonify(questionSkillLevel), 400
+            return jsonify(questionSkillLevel), 200
         else:
             return {
                 "status": 1,

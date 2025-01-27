@@ -67,7 +67,6 @@ class Helper:
 
         return default_response
 
-
     @classmethod
     def format_question_json(cls,inputQuestion):
         try:
@@ -76,9 +75,11 @@ class Helper:
             matches = re.findall(pattern, inputQuestion, re.DOTALL | re.IGNORECASE)
 
             for match in matches:
-
                 question, time, skill = match
                 time = int(round(float(time)))
+
+                if time == 0:
+                    time = 1
 
                 if skill not in questions:
                     questions[skill] = []
@@ -87,7 +88,6 @@ class Helper:
                         "time": int(time)
                         })
 
-
             final_json = questions
             logger.info(f"Final JSON: {final_json}")
             json_output = json.dumps(final_json, indent=4)
@@ -95,8 +95,6 @@ class Helper:
             return final_json
         except Exception as e:
             logger.error(f"error occured while formate question : {e}")
-
-
 
     @classmethod
     def remove_extra_questions(cls,output, keySkills, questionsPerSkill, proficiencyLevel):
