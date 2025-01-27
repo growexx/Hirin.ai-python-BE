@@ -11,7 +11,8 @@ class SQSMessage:
                 QueueUrl=queueUrl,
                 MaxNumberOfMessages=maxNumberOfMessage,
                 WaitTimeSeconds=waitTime,
-                MessageAttributeNames=['cv_screening_event']
+                MessageAttributeNames=['all'],
+                VisibilityTimeout=100
             )
             messages = response.get('Messages', [])
             return messages
