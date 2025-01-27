@@ -6,7 +6,7 @@ from app.utils.logger_config import logger
 
 async def main():
     try:
-        cvprocessor = QueueProcessor(batch_size=20, num_workers=20)
+        cvprocessor = QueueProcessor(batch_size=10, num_workers=5)
         await cvprocessor.process_queue_message_in_batches()
     except Exception as e:
         logger.error(f"Error occured while processing relevance summary: {e}")
