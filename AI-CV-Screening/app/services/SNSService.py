@@ -28,9 +28,23 @@ class SNSSender:
                 logger.info("Message sent successfully. Response:", response)
                 return response
         except Exception as e:
-            print("Failed to send message. Error:", e)
+            logger.info("Failed to send message. Error:", e)
             return None
-        
+
+
+    @classmethod
+    async def send_error_message_to_sns_async(self, error, message, subject, relevanceSummary, AWS_REGION,topic_arn):
+        try:
+            relevanceSummary = json.loads(relevanceSummary)
+            relevanceSummary['metadata'] = message['metadata']
+            relevanceSummary['error'] = error
+            relevanceSummary = json.dumps(relevanceSummary)
+            await SNSSender.send_message_to_sns_async(relevanceSummary,subject,AWS_REGION,topic_arn)
+            logger.info(f"successfully send the error message...")
+        except Exception  as e:
+            logger.info("Failed to send message.Error: ",e)
+
+         
 
 
     

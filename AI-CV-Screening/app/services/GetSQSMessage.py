@@ -12,7 +12,7 @@ class SQSMessage:
                 MaxNumberOfMessages=maxNumberOfMessage,
                 WaitTimeSeconds=waitTime,
                 MessageAttributeNames=['all'],
-                VisibilityTimeout=100
+                VisibilityTimeout=20
             )
             messages = response.get('Messages', [])
             return messages
