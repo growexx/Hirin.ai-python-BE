@@ -31,12 +31,14 @@ class ResumeRelevanceScorProcessor:
 
     async def getCVScore(self, task_queue,sqsUrl):
         try:
+            subject = "CV - screening"
             resume = ''
             resumePath = ''
             lammaRelevanceSummary = ''
             path = ''
             jobDescriptionPromptTemplate = ''
             todayDate = datetime.now().date()
+            relevanceSummary = ''
 
             while True:
                 message= await task_queue.get()
@@ -50,7 +52,9 @@ class ResumeRelevanceScorProcessor:
                     logger.info(f"Decoded message body: {messageData}")
                 except json.JSONDecodeError as e:
                         logger.error(f"Error decoding JSON: {e}")
+                        break
                         
+                             
                 actualMessageBody = messageData['Message']
 
                 try:
@@ -66,10 +70,24 @@ class ResumeRelevanceScorProcessor:
                 if resumePath:
                     resume = GetText.getText(resumePath)
                 else:
-                    logger.info(f"Error: Unable to pasred resume")
+                    logger.info(f"Error: Unable to dowmload resume")
+                    error = "Error:  Unable to download resume"
+                    await Helper.delete_file(resumePath)
+                    await SNSSender.send_error_message_to_sns_async(error, message_data, subject, '{}', self.AWS_REGION,self.SNS_ARN)
+                    await SQSMessage.delete_message(message,sqsUrl,self.AWS_REGION)
+                    break
+
                 
                 if resume:
                     await Helper.delete_file(resumePath)
+                else:
+                    logger.info(f"Error: Unable to parse resume")
+                    error = "Error while processing CV:  Unable to parse resume"
+                    await Helper.delete_file(resumePath)
+                    await SNSSender.send_error_message_to_sns_async(error, message_data, subject, '{}', self.AWS_REGION,self.SNS_ARN)
+                    await SQSMessage.delete_message(message,sqsUrl,self.AWS_REGION)
+                    break
+
 
                 if message_data['job_description_type'].lower() == 'url':
                     path = await BucketReadService.download_file_from_s3(message_data['job_description_url'],'app/static/JD/') 
@@ -127,20 +145,21 @@ class ResumeRelevanceScorProcessor:
 
                         if relevance_prompt_template != "" and outJsonFormat != "":
                             prompt = relevance_prompt_template.format(job_description=lammaJDSummary,resume=resume,date=todayDate,json_out_format=outJsonFormat)
-                        lammaRelevanceSummary = Helper.get_response_with_retry(prompt,self.bd_client,self.bdModel)
+                            lammaRelevanceSummary = Helper.get_response_with_retry(prompt,self.bd_client,self.bdModel)
                     
-                    if lammaRelevanceSummary:
+                    if lammaRelevanceSummary != '':
                         relevanceSummary = Helper.json_output_formatter(lammaRelevanceSummary,lammaJDSummary,message_data['metadata'])
-                        subject = "CV - screening"
+                       
                         response = await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.AWS_REGION,self.SNS_ARN)
                         if response:
-                            print(f"response:{response}")
+                            logger.info(f"response:{response}")
                             await SQSMessage.delete_message(message,sqsUrl,self.AWS_REGION)
                          
-                    else:
-                        error = f"unable to process the cv for {message_data['metadata']}"
-                        subject = "CV - screening"
-                        await SNSSender.send_message_to_sns_async(relevanceSummary,subject,self.AWS_REGION,self.SNS_ARN)
+                    else:   
+                        error = f"Error: Unable to process the cv"
+                        await SNSSender.send_error_message_to_sns_async(error, message_data, subject, '{}', self.AWS_REGION,self.SNS_ARN)
+                        await SQSMessage.delete_message(message,sqsUrl,self.AWS_REGION)
+                        break
                     
 
                     # openAIJDSummary=LLMClient.OpenAILLM(self.OPENAI_KEYClient,prompt,self.OPENAI_MODEL)
@@ -155,11 +174,14 @@ class ResumeRelevanceScorProcessor:
                     #     relevance_prompt_template = await Helper.read_prompt('app/static/ResumeRelevancePrompt.txt')
                     #     prompt = relevance_prompt_template.format(job_description=openAIJDSummary,resume=resume)
                     #     LLMClient.GemmaLLM(gClient,prompt,gmodel)
-
                 task_queue.task_done()
         except Exception as e:
             logger.error(f"{e} error occured while evaluating cv score.")
+            await SNSSender.send_error_message_to_sns_async(str(e), message_data, subject, '{}', self.AWS_REGION,self.SNS_ARN)
+            await SQSMessage.delete_message(message,sqsUrl,self.AWS_REGION)
         finally:
             task_queue.task_done()
+
+
     
  
