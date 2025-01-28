@@ -176,7 +176,7 @@ async def question_generation_zena():
         return jsonify({
             "status": "success",
             "message": "question generated successfully...",
-            "question":questions
+            "questions":questions
 
         }), 200
 

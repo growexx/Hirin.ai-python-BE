@@ -68,25 +68,27 @@ class Helper:
         return default_response
 
     @classmethod
-    def format_question_json(cls,inputQuestion):
+    def format_question_json(cls, inputQuestion):
         try:
-            pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*([\d.]+)\s*min\n.*?Key\s*Skill\s*:\s*(.*?)\n"
-            questions = {}
+
+            pattern = r"Question\s*Number\s*\d*:\s*(.*?)\nEstimated\s*Time:\s*([\d.]+)\s*min\nLevel\s*of\s*Difficulty:\s*(.*?)\n.*?Key\s*Skill\s*:\s*(.*?)\n"
+            questions = []
             matches = re.findall(pattern, inputQuestion, re.DOTALL | re.IGNORECASE)
 
             for match in matches:
-                question, time, skill = match
+                logger.info(f"Match: {match}")
+                question, time, difficulty, skill = match
                 time = int(round(float(time)))
 
                 if time == 0:
                     time = 1
 
-                if skill not in questions:
-                    questions[skill] = []
-                questions[skill].append({
-                        "question": question.strip(),
-                        "time": int(time)
-                        })
+                questions.append({
+                    "question": question.strip(),
+                    "time": time,
+                    "difficulty": difficulty.strip(),
+                    "key_skill": skill.strip()
+                })
 
             final_json = questions
             logger.info(f"Final JSON: {final_json}")
@@ -94,7 +96,7 @@ class Helper:
             logger.info(f"JSON output: {json_output}")
             return final_json
         except Exception as e:
-            logger.error(f"error occured while formate question : {e}")
+            logger.error(f"Error occurred while formatting question: {e}")
 
     @classmethod
     def remove_extra_questions(cls,output, keySkills, questionsPerSkill, proficiencyLevel):
