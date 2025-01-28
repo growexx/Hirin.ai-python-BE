@@ -86,16 +86,15 @@ class QuestionSkillLevelCreationService:
                     print(f"An error occurred: {e}")
 
             skill_retry_count = 0
-            while skill_retry_count < 3:
-                # Call LLM to generate input
+            max_retries = 3
+            while skill_retry_count < max_retries:
+
                 questionSkill = LLMClient.BedRockLLM(client, prompt, Bdmodel)
                 logger.info(f"Raw QuestionSkill: {questionSkill}")
 
-                # Standardize the response
                 questionSkill = Helper.standardize_llm_response(questionSkill)
                 logger.info(f"Standardized QuestionSkill: {questionSkill}")
 
-                # Validate list sizes
                 if  Helper.check_list_sizes(questionSkill):
                     logger.info(f"Validated QuestionSkill: {questionSkill}")
                     return questionSkill
@@ -103,7 +102,6 @@ class QuestionSkillLevelCreationService:
                     logger.warning(f"Validation failed. Retrying... ({skill_retry_count + 1}/{max_retries})")
                     skill_retry_count += 1
 
-            # If all retries fail, raise an exception or handle the failure
             logger.error("Skill Array Validation failed after maximum retries.")
 
             if not questionSkill:
